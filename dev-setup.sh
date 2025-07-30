@@ -1,15 +1,3 @@
-# Install curl
-sudo apt install curl
-# Install spotify
-snap install spotify
-# Install slack
-snap install slack
-# Install Git
-sudo apt install git
-# Install ZSH
-sudo apt install zsh
-# Oh my ZSH
-sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
 #Install github-cli
 (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
 && sudo mkdir -p -m 755 /etc/apt/keyrings \
@@ -36,18 +24,8 @@ sudo apt install postgresql postgresql-contrib
 # Starts Postgres service
 sudo systemctl start postgresql.service
 
-#Setup PGAdmin Repo
-# Install the public key for the repository (if not done previously):
-curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
-
-# Create the repository configuration file:
-sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list && apt update'
-
-# Install PGAdmin
-sudo apt install pgadmin4-desktop
-
-# Install flyway
-wget -qO- https://download.red-gate.com/maven/release/com/redgate/flyway/flyway-commandline/10.17.2/flyway-commandline-10.17.2-linux-x64.tar.gz | tar -xvz && sudo ln -s `pwd`/flyway-10.17.2/flyway /usr/local/bin 
+# Install dbeaver
+sudo snap install dbeaver-ce
 
 # Install Redis
 sudo apt-get install lsb-release curl gpg
@@ -56,3 +34,31 @@ sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
 sudo apt-get update
 sudo apt-get install redis
+
+# install vscode
+curl -L -o ~/Downloads/code_1.102.3-1753759567_amd64.deb https://vscode.download.prss.microsoft.com/dbazure/download/stable/488a1f239235055e34e673291fb8d8c810886f81/code_1.102.3-1753759567_amd64.deb
+sudo dpkg -i ~/Downloads/code_1.102.3-1753759567_amd64.deb
+
+# Set up docker
+for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+
+# Setup git config
+git config --global pull.rebase true
+git config --global user.name "Steve Freeman"
+git config --global user.email "sfreeman422@protonmail.com"
+
+# Python setup
+# Install Python development tools
+sudo apt install -y python3-pip python3-venv python3-dev
+pip3 install --user pipenv poetry black flake8 pytest
