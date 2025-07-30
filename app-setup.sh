@@ -15,3 +15,8 @@ sudo apt install ~/Downloads/steam_latest.deb -y
 curl -L -o ~/Downloads/protonmail-bridge_3.21.2-1_amd64.deb https://proton.me/download/bridge/protonmail-bridge_3.21.2-1_amd64.deb
 sudo apt install ~/Downloads/protonmail-bridge_3.21.2-1_amd64.deb
 sudo apt install --fix-broken -y
+
+# Install Zoom
+curl -L -o ~/Downloads/zoom_amd64.deb https://zoom.us/client/latest/zoom_amd64.deb
+sudo apt install ~/Downloads/zoom_amd64.deb -y
+sudo apt install --fix-broken -y
