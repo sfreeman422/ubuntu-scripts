@@ -1,3 +1,9 @@
+# Install curl
+sudo apt install curl -y 
+
+# Install Git
+sudo apt install git -y 
+
 #Install github-cli
 (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
 && sudo mkdir -p -m 755 /etc/apt/keyrings \
@@ -62,3 +68,6 @@ git config --global user.email "sfreeman422@protonmail.com"
 # Install Python development tools
 sudo apt install -y python3-pip python3-venv python3-dev
 pip3 install --user pipenv poetry black flake8 pytest
+
+# Install bruno
+sudo snap install bruno
