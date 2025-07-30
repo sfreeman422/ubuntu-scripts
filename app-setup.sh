@@ -1,11 +1,5 @@
-# Install spotify
-snap install spotify -y
-
-# Install slack
-snap install slack -y
-
-# Install discord
-snap install discord -y
+# Install spotify slack discord chromium
+snap install spotify slack discord chromium
 
 # Install steam
 curl -L -o ~/Downloads/steam_latest.deb https://repo.steampowered.com/steam/archive/precise/steam_latest.deb
