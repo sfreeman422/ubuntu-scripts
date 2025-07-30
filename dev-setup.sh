@@ -64,10 +64,5 @@ git config --global pull.rebase true
 git config --global user.name "Steve Freeman"
 git config --global user.email "sfreeman422@protonmail.com"
 
-# Python setup
-# Install Python development tools
-sudo apt install -y python3-pip python3-venv python3-dev
-pip3 install --user pipenv poetry black flake8 pytest
-
 # Install bruno
 sudo snap install bruno
