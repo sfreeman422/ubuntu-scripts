@@ -1,0 +1,5 @@
+# setup auto delete downloads after 30 days
+mkdir -p ~/scripts
+cp ./downloads-cleanup.sh ~/scripts/downloads-cleanup.sh
+chmod +x ~/scripts/downloads-cleanup.sh
+(crontab -l ; echo "*/5 * * * * ~/scripts/downloads-cleanup.sh") | crontab -
