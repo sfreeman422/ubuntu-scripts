@@ -36,8 +36,8 @@ find "$DOWNLOADS_DIR" -type f -mtime +30 -exec rm -f {} \; -print | while read f
 done
 
 # Find and delete empty directories (after files are deleted)
-log_message "Deleting empty directories..."
-find "$DOWNLOADS_DIR" -type d -empty -delete -print | while read dir; do
+log_message "Deleting empty directories (excluding Downloads root)..."
+find "$DOWNLOADS_DIR" -mindepth 1 -type d -empty -delete -print | while read dir; do
     log_message "Deleted empty directory: $dir"
 done
 

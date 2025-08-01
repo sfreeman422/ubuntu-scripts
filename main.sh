@@ -5,5 +5,5 @@ echo "Starting Ubuntu First-Time Setup..."
 ./zsh-theme.sh
 ./shell-cleanup.sh
 ./app-setup.sh
-
+./backup-setup.sh
 echo "Setup complete! Please reboot your system."
