@@ -3,7 +3,7 @@
 # Backup Setup Script
 # Sets up automated daily backups
 
-SCRIPT_DIR="/home/steve/code/ubuntu-scripts"
+SCRIPT_DIR="/home/steve/code/ubuntu-scripts/scripts/backup"
 BACKUP_SCRIPT="$SCRIPT_DIR/daily-backup.sh"
 
 echo "Setting up automated daily backup..."

@@ -23,3 +23,5 @@ gsettings set org.gnome.shell.extensions.dash-to-dock click-action 'minimize'
 # Oh my ZSH
 sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
 
+# Update alias
+echo 'alias uar="sudo apt update && sudo apt upgrade && sudo apt autoremove"' >> ~/.zshrc
