@@ -5,11 +5,12 @@
 # Date: $(date +"%Y-%m-%d")
 
 # Configuration
-BACKUP_DIR="/media/steve/Backup/ubuntu-desktop"
+BACKUP_BASE_DIR="/media/steve/Backup/ubuntu-desktop"
 SOURCE_DIR="/home/steve"
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="$BACKUP_BASE_DIR/$DATE"
 LOG_FILE="$BACKUP_DIR/backup.log"
 MAX_BACKUPS=7  # Keep 7 days of backups
-DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_NAME="home_backup_$DATE.tar.gz"
 
 # Function to log messages with timestamp
@@ -302,29 +303,22 @@ else
 fi
 
 # Clean up old backups (keep only last MAX_BACKUPS)
-log_message "Cleaning up old backups (keeping last $MAX_BACKUPS)"
-cd "$BACKUP_DIR"
+log_message "Cleaning up old backup directories (keeping last $MAX_BACKUPS)"
+cd "$BACKUP_BASE_DIR"
 
-# Clean up regular backups
-ls -t home_backup_*.tar.gz 2>/dev/null | grep -v "\.part" | tail -n +$((MAX_BACKUPS + 1)) | while read old_backup; do
-    if [ -f "$old_backup" ]; then
-        rm "$old_backup"
-        log_message "Removed old backup: $old_backup"
+# Clean up old backup directories
+ls -t */ 2>/dev/null | tail -n +$((MAX_BACKUPS + 1)) | while read old_backup_dir; do
+    if [ -d "$old_backup_dir" ]; then
+        rm -rf "$old_backup_dir"
+        log_message "Removed old backup directory: $old_backup_dir"
     fi
 done
 
-# Clean up split backups (remove entire sets)
-ls -t home_backup_*.tar.gz.part* 2>/dev/null | sed 's/\.tar\.gz\.part.*$//' | uniq | tail -n +$((MAX_BACKUPS + 1)) | while read backup_base; do
-    rm -f "${backup_base}.tar.gz.part"* 2>/dev/null
-    log_message "Removed old split backup set: ${backup_base}"
-done
-
 # Show backup statistics
-REGULAR_BACKUPS=$(ls -1 home_backup_*.tar.gz 2>/dev/null | grep -v "\.part" | wc -l)
-SPLIT_BACKUPS=$(ls -1 home_backup_*.tar.gz.part* 2>/dev/null | sed 's/\.tar\.gz\.part.*$//' | uniq | wc -l)
-TOTAL_BACKUPS=$((REGULAR_BACKUPS + SPLIT_BACKUPS))
-TOTAL_BACKUP_SIZE=$(du -sh . | cut -f1)
-log_message "Backup statistics: $TOTAL_BACKUPS backup sets ($REGULAR_BACKUPS regular, $SPLIT_BACKUPS split), Total size: $TOTAL_BACKUP_SIZE"
+TOTAL_BACKUP_DIRS=$(ls -1d "$BACKUP_BASE_DIR"/*/ 2>/dev/null | wc -l)
+CURRENT_BACKUP_SIZE=$(du -sh "$BACKUP_DIR" | cut -f1)
+TOTAL_BACKUP_SIZE=$(du -sh "$BACKUP_BASE_DIR" | cut -f1)
+log_message "Backup statistics: $TOTAL_BACKUP_DIRS backup directories, Current backup: $CURRENT_BACKUP_SIZE, Total size: $TOTAL_BACKUP_SIZE"
 
 # Send notification (if desktop environment available)
 if command -v notify-send >/dev/null 2>&1 && [ -n "$DISPLAY" ]; then
