@@ -71,7 +71,7 @@ echo ""
 # Install Redis
 echo "📊 Installing Redis in-memory database..."
 echo "   - Adding Redis package repository..."
-sudo apt-get install lsb-release curl gpg
+sudo apt-get install lsb-release curl gpg -y 
 curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
 sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list

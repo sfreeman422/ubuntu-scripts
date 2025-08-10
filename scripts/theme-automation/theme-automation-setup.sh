@@ -106,11 +106,11 @@ EOF
 # Create systemd timer file for periodic checks
 cat > "$SYSTEMD_USER_DIR/theme-automation.timer" << EOF
 [Unit]
-Description=Run Ubuntu Theme Automation every 15 minutes
+Description=Run Ubuntu Theme Automation every 1 minute
 Requires=theme-automation.service
 
 [Timer]
-OnCalendar=*:0/15
+OnCalendar=*:0/1
 Persistent=true
 
 [Install]
@@ -136,7 +136,7 @@ echo ""
 echo "📋 What was installed:"
 echo "   • Theme automation script: $THEME_SCRIPT"
 echo "   • Systemd service: theme-automation.service"
-echo "   • Systemd timer: theme-automation.timer (runs every 15 minutes)"
+echo "   • Systemd timer: theme-automation.timer (runs every 1 minutes)"
 echo ""
 echo "🎛️  Manual controls:"
 echo "   • Force light theme: $THEME_SCRIPT --light"
