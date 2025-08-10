@@ -13,6 +13,7 @@ echo "   • System packages and configuration"
 echo "   • Development tools and environment"
 echo "   • ZSH with modern theme"
 echo "   • Essential applications"
+echo "   • Automatic theme switching (light/dark)"
 echo "   • Automated backup system"
 echo "   • Downloads folder cleanup"
 echo ""
@@ -41,21 +42,27 @@ echo "---------------------------------------------"
 echo ""
 
 # Application setup
-echo "📱 STEP 4/6: Application Setup"
+echo "📱 STEP 4/7: Application Setup"
 echo "---------------------------------------------"
 ./app/app-setup.sh
 echo ""
 
-# Backup setup
-echo "💾 STEP 5/6: Backup Automation Setup"
+# Theme automation setup
+echo "🎨 STEP 5/7: Theme Automation Setup"
 echo "---------------------------------------------"
-./scripts/backup-setup.sh
+./scripts/theme-automation/theme-automation-setup.sh
+echo ""
+
+# Backup setup
+echo "💾 STEP 6/7: Backup Automation Setup"
+echo "---------------------------------------------"
+./scripts/backup/backup-setup.sh
 echo ""
 
 # Downloads cleanup setup
-echo "🗂️  STEP 6/6: Downloads Cleanup Setup"
+echo "🗂️  STEP 7/7: Downloads Cleanup Setup"
 echo "---------------------------------------------"
-./scripts/downloads-cleanup-setup.sh
+./scripts/downloads-cleanup/downloads-cleanup-setup.sh
 echo ""
 
 echo "============================================="
@@ -67,6 +74,7 @@ echo "   ✅ System packages updated and configured"
 echo "   ✅ Development environment installed"
 echo "   ✅ Modern ZSH theme configured"
 echo "   ✅ Essential applications installed"
+echo "   ✅ Automatic theme switching enabled"
 echo "   ✅ Automated backup system active"
 echo "   ✅ Downloads cleanup automation enabled"
 echo ""

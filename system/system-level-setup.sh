@@ -52,6 +52,13 @@ sudo apt install -y fonts-firacode fonts-powerline
 echo "✅ Developer fonts installed successfully"
 echo ""
 
+# Install/update GTK common themes
+echo "🎨 Installing/updating GTK common themes..."
+sudo snap refresh --edge gtk-common-themes
+
+echo "✅ GTK common themes updated successfully"
+echo ""
+
 # Hide desktop icons
 echo "🖥️  Configuring GNOME desktop settings..."
 echo "   - Hiding desktop icons..."
@@ -91,6 +98,7 @@ echo "   ✓ htop system monitor"
 echo "   ✓ Multimedia codecs"
 echo "   ✓ Automatic security updates"
 echo "   ✓ Developer fonts (Fira Code, Powerline)"
+echo "   ✓ GTK common themes updated"
 echo "   ✓ Desktop settings optimized"
 echo "   ✓ Oh My Zsh framework"
 echo "   ✓ Useful shell aliases"
