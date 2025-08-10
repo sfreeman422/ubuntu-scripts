@@ -19,11 +19,8 @@ echo ""
 
 # Install Slack
 echo "💬 Installing Slack..."
-echo "   - Downloading Slack Desktop..."
-curl -L -o ~/Downloads/slack-desktop-4.45.64-amd64.deb https://downloads.slack-edge.com/desktop-releases/linux/x64/4.45.64/slack-desktop-4.45.64-amd64.deb
-echo "   - Installing Slack package..."
-sudo apt install ~/Downloads/slack-desktop-4.45.64-amd64.deb -y
-sudo apt install --fix-broken -y
+echo "   - Installing Slack via snap (always latest version)..."
+sudo snap install slack
 echo "✅ Slack installed successfully"
 echo ""
 

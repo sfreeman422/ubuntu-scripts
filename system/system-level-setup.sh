@@ -10,7 +10,7 @@ echo "========================================="
 
 # Update and upgrade
 echo "📦 Updating package lists and upgrading system packages..."
-sudo apt update && sudo apt upgrade
+sudo apt update && sudo apt upgrade -y
 
 echo "✅ System packages updated successfully"
 echo ""
@@ -24,21 +24,21 @@ echo ""
 
 # install htop
 echo "📊 Installing htop system monitor..."
-sudo snap install htop
+sudo snap install htop -y
 
 echo "✅ htop installed successfully"
 echo ""
 
 # Install multimedia codecs
 echo "🎬 Installing Ubuntu restricted extras (multimedia codecs)..."
-sudo apt install ubuntu-restricted-extras
+sudo apt install ubuntu-restricted-extras -y
 
 echo "✅ Multimedia codecs installed successfully"
 echo ""
 
 # Install unattended upgrades
 echo "🔄 Setting up automatic security updates..."
-sudo apt install unattended-upgrades
+sudo apt install unattended-upgrades -y
 echo "📝 Configuring unattended upgrades (you may be prompted for settings)..."
 sudo dpkg-reconfigure -plow unattended-upgrades
 
@@ -82,7 +82,7 @@ echo ""
 # Update alias
 echo "⚡ Adding useful shell aliases..."
 echo "   - Adding 'uar' alias for update/upgrade/autoremove..."
-echo 'alias uar="sudo apt update && sudo apt upgrade && sudo apt autoremove"' >> ~/.zshrc
+echo 'alias uar="sudo apt update && sudo apt upgrade && sudo apt autoremove -y"' >> ~/.zshrc
 
 echo "✅ Shell aliases added successfully"
 echo ""

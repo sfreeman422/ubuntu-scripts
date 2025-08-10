@@ -83,10 +83,12 @@ echo ""
 
 # install vscode
 echo "💻 Installing Visual Studio Code..."
-echo "   - Downloading VS Code package..."
-curl -L -o ~/Downloads/code_1.102.3-1753759567_amd64.deb https://vscode.download.prss.microsoft.com/dbazure/download/stable/488a1f239235055e34e673291fb8d8c810886f81/code_1.102.3-1753759567_amd64.deb
-echo "   - Installing VS Code package..."
-sudo dpkg -i ~/Downloads/code_1.102.3-1753759567_amd64.deb
+echo "   - Adding Microsoft repository..."
+curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list
+echo "   - Installing latest VS Code..."
+sudo apt update
+sudo apt install code -y
 echo "✅ Visual Studio Code installed successfully"
 echo ""
 
