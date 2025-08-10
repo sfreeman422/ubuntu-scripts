@@ -67,6 +67,24 @@ echo "✅ All dependencies satisfied"
 # Make the theme script executable
 chmod +x "$THEME_SCRIPT"
 
+# Setup snap theme connections
+echo "🔗 Setting up snap theme connections..."
+if snap list gtk-common-themes >/dev/null 2>&1; then
+    # Connect common snap applications to gtk-common-themes
+    snap_apps=("firefox" "code" "discord" "spotify" "chromium" "thunderbird")
+    for app in "${snap_apps[@]}"; do
+        if snap list "$app" >/dev/null 2>&1; then
+            echo "  - Connecting $app to gtk-common-themes..."
+            sudo snap connect "$app:gtk-3-themes" gtk-common-themes:gtk-3-themes 2>/dev/null || true
+            sudo snap connect "$app:icon-themes" gtk-common-themes:icon-themes 2>/dev/null || true
+            sudo snap connect "$app:sound-themes" gtk-common-themes:sound-themes 2>/dev/null || true
+        fi
+    done
+    echo "✅ Snap theme connections configured"
+else
+    echo "⚠️  gtk-common-themes snap not found. Install it with: sudo snap install gtk-common-themes"
+fi
+
 # Create systemd user directory if it doesn't exist
 mkdir -p "$SYSTEMD_USER_DIR"
 
