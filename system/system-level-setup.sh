@@ -59,6 +59,14 @@ sudo snap refresh --edge gtk-common-themes
 echo "✅ GTK common themes updated successfully"
 echo ""
 
+# Configure time for dual boot with Windows
+echo "⏰ Configuring system time for dual boot compatibility..."
+echo "   - Setting hardware clock to use local time (Windows compatibility)..."
+sudo timedatectl set-local-rtc 1 --adjust-system-clock
+
+echo "✅ Time configuration updated for dual boot"
+echo ""
+
 # Hide desktop icons
 echo "🖥️  Configuring GNOME desktop settings..."
 echo "   - Hiding desktop icons..."
@@ -99,6 +107,7 @@ echo "   ✓ Multimedia codecs"
 echo "   ✓ Automatic security updates"
 echo "   ✓ Developer fonts (Fira Code, Powerline)"
 echo "   ✓ GTK common themes updated"
+echo "   ✓ Time configured for dual boot (local RTC)"
 echo "   ✓ Desktop settings optimized"
 echo "   ✓ Oh My Zsh framework"
 echo "   ✓ Useful shell aliases"
