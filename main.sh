@@ -13,6 +13,7 @@ echo "   • System packages and configuration"
 echo "   • Development tools and environment"
 echo "   • ZSH with modern theme"
 echo "   • Essential applications"
+echo "   • Gaming environment (Wine & Lutris)"
 echo "   • Automatic theme switching (light/dark)"
 echo "   • Automated backup system"
 echo "   • Downloads folder cleanup"
@@ -42,25 +43,31 @@ echo "---------------------------------------------"
 echo ""
 
 # Application setup
-echo "📱 STEP 4/7: Application Setup"
+echo "📱 STEP 4/8: Application Setup"
 echo "---------------------------------------------"
 ./app/app-setup.sh
 echo ""
 
+# Gaming setup
+echo "🎮 STEP 5/8: Gaming Environment Setup"
+echo "---------------------------------------------"
+./scripts/gaming/gaming.sh
+echo ""
+
 # Theme automation setup
-echo "🎨 STEP 5/7: Theme Automation Setup"
+echo "🎨 STEP 6/8: Theme Automation Setup"
 echo "---------------------------------------------"
 ./scripts/theme-automation/theme-automation-setup.sh
 echo ""
 
 # Backup setup
-echo "💾 STEP 6/7: Backup Automation Setup"
+echo "💾 STEP 7/8: Backup Automation Setup"
 echo "---------------------------------------------"
 ./scripts/backup/backup-setup.sh
 echo ""
 
 # Downloads cleanup setup
-echo "🗂️  STEP 7/7: Downloads Cleanup Setup"
+echo "🗂️  STEP 8/8: Downloads Cleanup Setup"
 echo "---------------------------------------------"
 ./scripts/downloads-cleanup/downloads-cleanup-setup.sh
 echo ""
@@ -74,6 +81,7 @@ echo "   ✅ System packages updated and configured"
 echo "   ✅ Development environment installed"
 echo "   ✅ Modern ZSH theme configured"
 echo "   ✅ Essential applications installed"
+echo "   ✅ Gaming environment configured"
 echo "   ✅ Automatic theme switching enabled"
 echo "   ✅ Automated backup system active"
 echo "   ✅ Downloads cleanup automation enabled"
