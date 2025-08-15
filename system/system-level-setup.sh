@@ -63,6 +63,7 @@ echo ""
 echo "⏰ Configuring system time for dual boot compatibility..."
 echo "   - Setting hardware clock to use local time (Windows compatibility)..."
 sudo timedatectl set-local-rtc 1 --adjust-system-clock
+timedatectl set-local-rtc 1
 
 echo "✅ Time configuration updated for dual boot"
 echo ""
