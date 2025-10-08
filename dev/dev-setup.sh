@@ -133,6 +133,13 @@ sudo apt update && sudo apt install bruno
 echo "✅ Bruno installed successfully"
 echo ""
 
+# Install AWS CLI
+echo "☁️  Installing AWS CLI..."
+echo "   - Installing from snap store..."
+sudo snap install aws-cli --classic
+echo "✅ AWS CLI installed successfully"
+echo ""
+
 echo "========================================="
 echo "🎉 Development Tools Setup Complete!"
 echo "========================================="
@@ -148,6 +155,7 @@ echo "   ✓ Redis - In-memory database"
 echo "   ✓ Visual Studio Code - Code editor"
 echo "   ✓ Docker - Container platform"
 echo "   ✓ Bruno - API client"
+echo "   ✓ AWS CLI - Amazon Web Services CLI"
 echo ""
 echo "⚙️  Git configured with:"
 echo "   - Rebase on pull: enabled"
