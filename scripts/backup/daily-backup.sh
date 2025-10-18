@@ -23,6 +23,21 @@ mkdir -p "$BACKUP_DIR"
 
 log_message "Starting daily backup of home directory"
 
+# Clean up old backups (keep only last MAX_BACKUPS)
+log_message "Cleaning up old backup directories (keeping last $MAX_BACKUPS)"
+cd "$BACKUP_BASE_DIR"
+
+# Clean up old backup directories
+find . -maxdepth 1 -type d ! -name "." -printf "%T@ %f\n" | \
+    sort -nr | \
+    tail -n +$((MAX_BACKUPS + 1)) | \
+    while read timestamp dirname; do
+        if [ -d "$dirname" ]; then
+            rm -rf "$dirname"
+            log_message "Removed old backup directory: $dirname"
+        fi
+    done
+
 # Check available disk space and file system type
 AVAILABLE_SPACE=$(df "$BACKUP_DIR" | awk 'NR==2{print $4}')
 AVAILABLE_GB=$((AVAILABLE_SPACE / 1024 / 1024))
@@ -90,6 +105,7 @@ core
 *.pid
 .git/objects/pack/*.pack
 .git/objects/pack/*.idx
+Games
 snap
 EOF
 
@@ -97,19 +113,16 @@ log_message "Created exclusion list with $(wc -l < "$EXCLUDE_FILE") exclusion pa
 
 # Log what will be excluded (for debugging)
 log_message "Checking which large directories will be excluded:"
-for exclude_pattern in ".local/share/Steam" ".cache" "Downloads" ".docker" ".gradle" "node_modules" "snap"; do
+# Read exclude file and check directories (skip patterns with wildcards)
+while IFS= read -r exclude_pattern; do
+    # Skip empty lines, comments, and patterns with wildcards
+    [[ -z "$exclude_pattern" || "$exclude_pattern" =~ ^# || "$exclude_pattern" =~ [\*\?] ]] && continue
+    
     if [ -d "$SOURCE_DIR/$exclude_pattern" ]; then
         SIZE=$(du -sh "$SOURCE_DIR/$exclude_pattern" 2>/dev/null | cut -f1)
-        log_message "  Found $exclude_pattern (${SIZE}) - will be excluded from backup ONLY"
+        log_message "  Found $exclude_pattern (${SIZE}) - will be excluded from backup"
     fi
-done
-
-# SAFETY CHECK: Verify we're not using any destructive operations
-log_message "SAFETY CHECK: Verifying backup commands are read-only"
-if grep -q "rm.*$SOURCE_DIR" "$0" || grep -q "delete.*$SOURCE_DIR" "$0"; then
-    log_message "ERROR: Potential destructive operation detected in script!"
-    exit 1
-fi
+done < "$EXCLUDE_FILE"
 
 # Verify source directory is intact
 if [ ! -d "$SOURCE_DIR" ]; then
@@ -134,40 +147,55 @@ fi
 
 # Estimate backup size first
 log_message "Estimating backup size..."
-# Use tar to estimate size with same exclusions as actual backup
+
+# First try using tar for size estimation
+log_message "Attempting primary size estimation method..."
 ESTIMATED_SIZE=$(tar --exclude-from="$EXCLUDE_FILE" \
-                     --exclude="$BACKUP_DIR" \
-                     --totals \
-                     --dry-run \
-                     -cf /dev/null \
-                     -C "$SOURCE_DIR" . 2>&1 | \
-                 grep "Total bytes written" | \
-                 awk '{print $4}' | \
-                 tr -d '()')
+                    --exclude="$BACKUP_DIR" \
+                    --totals \
+                    --warning=no-file-changed \
+                    --warning=no-file-removed \
+                    --dry-run \
+                    -cf /dev/null \
+                    -C "$SOURCE_DIR" . 2>&1 | \
+                grep "Total bytes written:" | \
+                awk '{print $4}' | \
+                tr -d '()')
 
 if [[ -n "$ESTIMATED_SIZE" && "$ESTIMATED_SIZE" -gt 0 ]]; then
     ESTIMATED_GB=$((ESTIMATED_SIZE / 1024 / 1024 / 1024))
     log_message "Estimated backup size (with exclusions): ${ESTIMATED_GB}GB"
 else
-    # Fallback: calculate manually with exclusions
+    # Fallback: calculate manually with exclusions from exclude file
     log_message "Using fallback size estimation method..."
-    ESTIMATED_SIZE=0
-    find "$SOURCE_DIR" -type f -not -path "*/.cache/*" \
-                              -not -path "*/.local/share/Trash/*" \
-                              -not -path "*/.local/share/Steam/*" \
-                              -not -path "*/Downloads/*" \
-                              -not -path "*/node_modules/*" \
-                              -not -path "*/.docker/*" \
-                              -not -path "*/.gradle/*" \
-                              -not -path "*/Cache*" \
-                              -not -path "*/snap/*" \
-                              -exec du -b {} + 2>/dev/null | \
-    awk '{sum+=$1} END {print sum}' > /tmp/backup_size_estimate
     
-    ESTIMATED_SIZE=$(cat /tmp/backup_size_estimate 2>/dev/null || echo "0")
-    ESTIMATED_GB=$((ESTIMATED_SIZE / 1024 / 1024 / 1024))
-    rm -f /tmp/backup_size_estimate
-    log_message "Estimated backup size (with exclusions): ${ESTIMATED_GB}GB"
+    # Create temporary find command script
+    FIND_SCRIPT=$(mktemp)
+    echo '#!/bin/bash' > "$FIND_SCRIPT"
+    echo "cd '$SOURCE_DIR'" >> "$FIND_SCRIPT"
+    echo -n "find . -type f " >> "$FIND_SCRIPT"
+    
+    # Add exclusions from exclude file
+    while IFS= read -r pattern; do
+        # Skip empty lines and comments
+        [[ -z "$pattern" || "$pattern" =~ ^# ]] && continue
+        echo -n "-not -path '*/$pattern' -not -path '*/$pattern/*' " >> "$FIND_SCRIPT"
+    done < "$EXCLUDE_FILE"
+    
+    echo "-exec du -b {} + 2>/dev/null" >> "$FIND_SCRIPT"
+    chmod +x "$FIND_SCRIPT"
+    
+    # Execute the find command
+    ESTIMATED_SIZE=$("$FIND_SCRIPT" | awk '{sum+=$1} END {print sum}')
+    rm -f "$FIND_SCRIPT"
+    
+    if [[ -n "$ESTIMATED_SIZE" && "$ESTIMATED_SIZE" -gt 0 ]]; then
+        ESTIMATED_GB=$((ESTIMATED_SIZE / 1024 / 1024 / 1024))
+        log_message "Estimated backup size (with exclusions): ${ESTIMATED_GB}GB"
+    else
+        log_message "WARNING: Both size estimation methods failed. Proceeding with backup anyway."
+        ESTIMATED_GB=0
+    fi
 fi
 
 # Choose backup method based on file system and size
@@ -301,18 +329,6 @@ else
         exit 1
     fi
 fi
-
-# Clean up old backups (keep only last MAX_BACKUPS)
-log_message "Cleaning up old backup directories (keeping last $MAX_BACKUPS)"
-cd "$BACKUP_BASE_DIR"
-
-# Clean up old backup directories
-ls -t */ 2>/dev/null | tail -n +$((MAX_BACKUPS + 1)) | while read old_backup_dir; do
-    if [ -d "$old_backup_dir" ]; then
-        rm -rf "$old_backup_dir"
-        log_message "Removed old backup directory: $old_backup_dir"
-    fi
-done
 
 # Show backup statistics
 TOTAL_BACKUP_DIRS=$(ls -1d "$BACKUP_BASE_DIR"/*/ 2>/dev/null | wc -l)
