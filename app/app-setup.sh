@@ -17,10 +17,20 @@ snap install spotify discord chromium
 echo "✅ Snap applications installed successfully"
 echo ""
 
-# Install Slack
+# Install Slack (apt)
 echo "💬 Installing Slack..."
-echo "   - Installing Slack via snap (always latest version)..."
-sudo snap install slack
+echo "   - Adding Slack apt repository and GPG key (if needed)..."
+if [ ! -f /etc/apt/sources.list.d/slack.list ]; then
+	sudo mkdir -p /usr/share/keyrings
+	curl -fsSL https://packagecloud.io/slacktechnologies/slack/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/slack-archive-keyring.gpg
+	echo "deb [arch=amd64 signed-by=/usr/share/keyrings/slack-archive-keyring.gpg] https://packagecloud.io/slacktechnologies/slack/debian/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/slack.list > /dev/null
+	echo "   - Slack repository added."
+else
+	echo "   - Slack repository already present, skipping addition."
+fi
+echo "   - Updating apt and installing Slack (slack-desktop)..."
+sudo apt update
+sudo apt install -y slack-desktop || sudo apt install -f -y
 echo "✅ Slack installed successfully"
 echo ""
 
