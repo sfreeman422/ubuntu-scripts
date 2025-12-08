@@ -120,11 +120,21 @@ git config --global user.email "sfreeman422@protonmail.com"
 echo "✅ Git configuration completed"
 echo ""
 
-# Install bruno
-echo "🌩️  Installing Bruno API client..."
-echo "   - Installing Bruno..."
-snap install bruno
-echo "✅ Bruno installed successfully"
+# Install Insomnia (REST client) via apt
+echo "🌩️  Installing Insomnia REST client..."
+echo "   - Adding Insomnia apt repository and GPG key (if needed)..."
+if [ ! -f /etc/apt/sources.list.d/insomnia.list ]; then
+  sudo mkdir -p /usr/share/keyrings
+  curl -fsSL https://deb.insomnia.rest/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/insomnia-archive-keyring.gpg
+  echo "deb [signed-by=/usr/share/keyrings/insomnia-archive-keyring.gpg] https://deb.insomnia.rest/ v1 main" | sudo tee /etc/apt/sources.list.d/insomnia.list > /dev/null
+  echo "   - Insomnia repository added."
+else
+  echo "   - Insomnia repository already present, skipping addition."
+fi
+echo "   - Updating apt and installing Insomnia (insomnia)..."
+sudo apt update
+sudo apt install -y insomnia || sudo apt install -f -y
+echo "✅ Insomnia installed successfully"
 echo ""
 
 # Install AWS CLI
@@ -148,7 +158,7 @@ echo "   ✓ DBeaver - Database client"
 echo "   ✓ Redis - In-memory database"
 echo "   ✓ Visual Studio Code - Code editor"
 echo "   ✓ Docker - Container platform"
-echo "   ✓ Bruno - API client"
+echo "   ✓ Insomnia - API client"
 echo "   ✓ AWS CLI - Amazon Web Services CLI"
 echo ""
 echo "⚙️  Git configured with:"
