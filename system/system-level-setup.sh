@@ -59,6 +59,12 @@ sudo snap refresh --edge gtk-common-themes
 echo "✅ GTK common themes updated successfully"
 echo ""
 
+# Install GNOME Tweaks
+echo "🧰 Installing GNOME Tweaks (gnome-tweaks)..."
+sudo apt install -y gnome-tweaks
+echo "✅ GNOME Tweaks installed successfully"
+echo ""
+
 # Configure time for dual boot with Windows
 echo "⏰ Configuring system time for dual boot compatibility..."
 echo "   - Setting hardware clock to use local time (Windows compatibility)..."
@@ -108,6 +114,7 @@ echo "   ✓ Multimedia codecs"
 echo "   ✓ Automatic security updates"
 echo "   ✓ Developer fonts (Fira Code, Powerline)"
 echo "   ✓ GTK common themes updated"
+echo "   ✓ Gnome tweaks installed"
 echo "   ✓ Time configured for dual boot (local RTC)"
 echo "   ✓ Desktop settings optimized"
 echo "   ✓ Oh My Zsh framework"
