@@ -81,15 +81,26 @@ sudo apt-get install redis
 echo "✅ Redis installed successfully"
 echo ""
 
-# install vscode
-echo "💻 Installing Visual Studio Code..."
-echo "   - Adding Microsoft repository..."
-curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list
-echo "   - Installing latest VS Code..."
-sudo apt update
-sudo apt install code -y
-echo "✅ Visual Studio Code installed successfully"
+# install cursor
+echo "💻 Installing Cursor..."
+echo "   - Downloading Cursor .deb package..."
+wget -qO /tmp/cursor.deb "https://downloader.cursor.sh/linux/appImage/x64"
+if [ -f /tmp/cursor.deb ]; then
+  echo "   - Installing Cursor..."
+  sudo apt install /tmp/cursor.deb -y
+  rm /tmp/cursor.deb
+  echo "✅ Cursor installed successfully"
+else
+  echo "   - Download failed, trying alternative method..."
+  curl -fsSL https://downloader.cursor.sh/linux/appImage/x64 -o /tmp/cursor.deb
+  if [ -f /tmp/cursor.deb ]; then
+    sudo apt install /tmp/cursor.deb -y
+    rm /tmp/cursor.deb
+    echo "✅ Cursor installed successfully"
+  else
+    echo "⚠️  Could not download Cursor. Please install manually from https://cursor.sh"
+  fi
+fi
 echo ""
 
 # Set up docker
