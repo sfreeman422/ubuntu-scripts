@@ -84,22 +84,20 @@ echo ""
 # install cursor
 echo "💻 Installing Cursor..."
 echo "   - Downloading Cursor .deb package..."
-wget -qO /tmp/cursor.deb "https://downloader.cursor.sh/linux/appImage/x64"
-if [ -f /tmp/cursor.deb ]; then
-  echo "   - Installing Cursor..."
-  sudo apt install /tmp/cursor.deb -y
-  rm /tmp/cursor.deb
-  echo "✅ Cursor installed successfully"
-else
-  echo "   - Download failed, trying alternative method..."
-  curl -fsSL https://downloader.cursor.sh/linux/appImage/x64 -o /tmp/cursor.deb
+CURSOR_DEB_URL=$(curl -s https://api.github.com/repos/getcursor/cursor/releases/latest | grep "browser_download_url.*\.deb" | cut -d '"' -f 4 | head -n 1)
+if [ -n "$CURSOR_DEB_URL" ]; then
+  echo "   - Found latest release, downloading..."
+  wget -qO /tmp/cursor.deb "$CURSOR_DEB_URL"
   if [ -f /tmp/cursor.deb ]; then
-    sudo apt install /tmp/cursor.deb -y
+    echo "   - Installing Cursor..."
+    sudo dpkg -i /tmp/cursor.deb || sudo apt-get install -f -y
     rm /tmp/cursor.deb
     echo "✅ Cursor installed successfully"
   else
-    echo "⚠️  Could not download Cursor. Please install manually from https://cursor.sh"
+    echo "⚠️  Download failed. Please install manually from https://cursor.sh/downloads"
   fi
+else
+  echo "⚠️  Could not find download URL. Please install manually from https://cursor.sh/downloads"
 fi
 echo ""
 
