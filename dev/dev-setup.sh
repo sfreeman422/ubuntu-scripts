@@ -56,6 +56,13 @@ curl -fsSL https://get.pnpm.io/install.sh | sh -
 echo "✅ pnpm installed successfully"
 echo ""
 
+# Add npm -> pnpm aliases
+echo "🔗 Adding npm to pnpm aliases..."
+echo 'alias "npm i"="pnpm install"' >> ~/.zshrc
+echo 'alias "npm install"="pnpm install"' >> ~/.zshrc
+echo "✅ npm aliases added (npm i, npm install -> pnpm install)"
+echo ""
+
 # Install Claude Code
 echo "🤖 Installing Claude Code CLI..."
 curl -fsSL https://claude.ai/install.sh | sh
@@ -176,6 +183,7 @@ echo "   ✓ Git - Version control"
 echo "   ✓ GitHub CLI - GitHub integration"
 echo "   ✓ NVM + Node.js LTS - JavaScript runtime"
 echo "   ✓ pnpm - Fast, disk space efficient package manager"
+echo "   ✓ npm aliases - npm i/install redirected to pnpm"
 echo "   ✓ Claude Code - AI coding assistant CLI"
 echo "   ✓ PostgreSQL - Database server"
 echo "   ✓ DBeaver - Database client"
