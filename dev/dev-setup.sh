@@ -50,6 +50,12 @@ nvm install --lts
 echo "✅ Node.js LTS installed successfully"
 echo ""
 
+# Install Claude Code
+echo "🤖 Installing Claude Code CLI..."
+curl -fsSL https://claude.ai/install.sh | sh
+echo "✅ Claude Code installed successfully"
+echo ""
+
 # Install postgres
 echo "🐘 Installing PostgreSQL database server..."
 sudo apt install postgresql postgresql-contrib
@@ -162,6 +168,7 @@ echo "   ✓ curl - HTTP client"
 echo "   ✓ Git - Version control"
 echo "   ✓ GitHub CLI - GitHub integration"
 echo "   ✓ NVM + Node.js LTS - JavaScript runtime"
+echo "   ✓ Claude Code - AI coding assistant CLI"
 echo "   ✓ PostgreSQL - Database server"
 echo "   ✓ DBeaver - Database client"
 echo "   ✓ Redis - In-memory database"
