@@ -50,9 +50,16 @@ nvm install --lts
 echo "✅ Node.js LTS installed successfully"
 echo ""
 
+# Install pnpm
+echo "📦 Installing pnpm package manager..."
+curl -fsSL https://get.pnpm.io/install.sh | sh -
+echo "✅ pnpm installed successfully"
+echo ""
+
 # Install Claude Code
 echo "🤖 Installing Claude Code CLI..."
 curl -fsSL https://claude.ai/install.sh | sh
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
 echo "✅ Claude Code installed successfully"
 echo ""
 
@@ -168,6 +175,7 @@ echo "   ✓ curl - HTTP client"
 echo "   ✓ Git - Version control"
 echo "   ✓ GitHub CLI - GitHub integration"
 echo "   ✓ NVM + Node.js LTS - JavaScript runtime"
+echo "   ✓ pnpm - Fast, disk space efficient package manager"
 echo "   ✓ Claude Code - AI coding assistant CLI"
 echo "   ✓ PostgreSQL - Database server"
 echo "   ✓ DBeaver - Database client"
