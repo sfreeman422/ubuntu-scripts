@@ -7,7 +7,7 @@
 # notification and blocks shutdown if backups are running.
 #
 # Usage: Run via cron every 5 minutes between 03:00-04:59
-#   */5 3-4 * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus ~/scripts/idle-shutdown.sh
+#   */5 3-4 * * * ~/scripts/idle-shutdown.sh
 #
 
 # Configuration
@@ -21,6 +21,41 @@ mkdir -p "$(dirname "$LOG_FILE")"
 # Logging function
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
+}
+
+# Auto-detect display session when running from cron
+setup_display_env() {
+    # If DISPLAY or WAYLAND_DISPLAY is already set, we're good
+    if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
+        return 0
+    fi
+
+    # Find the active graphical session for the current user
+    local session_id
+    session_id=$(loginctl list-sessions --no-legend 2>/dev/null | \
+        awk -v user="$USER" '$3 == user {print $1; exit}')
+
+    if [ -z "$session_id" ]; then
+        return 1
+    fi
+
+    # Get session type (x11 or wayland)
+    local session_type
+    session_type=$(loginctl show-session "$session_id" -p Type --value 2>/dev/null)
+
+    if [ "$session_type" = "x11" ]; then
+        export DISPLAY=$(loginctl show-session "$session_id" -p Display --value 2>/dev/null)
+    elif [ "$session_type" = "wayland" ]; then
+        export WAYLAND_DISPLAY="wayland-0"
+    fi
+
+    # Set up DBUS session bus if not already set
+    if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
+        local uid=$(id -u)
+        export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus"
+    fi
+
+    return 0
 }
 
 # Check if current time is within allowed hours (03:00 - 05:00)
@@ -83,6 +118,9 @@ main() {
     fi
 
     log "Starting idle check"
+
+    # Auto-detect display environment if running from cron
+    setup_display_env
 
     # Get idle time
     idle_time=$(get_idle_time)
