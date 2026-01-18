@@ -20,8 +20,19 @@ cp ./downloads-cleanup.sh ~/scripts/downloads-cleanup.sh
 chmod +x ~/scripts/downloads-cleanup.sh
 
 echo "⏰ Setting up cron job to run every 5 minutes..."
-(crontab -l ; echo "*/5 * * * * ~/scripts/downloads-cleanup.sh") | crontab -
-echo "✅ Cron job configured successfully"
+CRON_LINE="*/5 * * * * ~/scripts/downloads-cleanup.sh"
+EXISTING_CRON=$(crontab -l 2>/dev/null || true)
+
+if echo "$EXISTING_CRON" | grep -F "$CRON_LINE" > /dev/null; then
+	echo "   - Cron job already exists, skipping creation"
+else
+	if [ -n "$EXISTING_CRON" ]; then
+		printf "%s\n%s\n" "$EXISTING_CRON" "$CRON_LINE" | crontab -
+	else
+		echo "$CRON_LINE" | crontab -
+	fi
+	echo "✅ Cron job configured successfully"
+fi
 echo ""
 
 echo "========================================="

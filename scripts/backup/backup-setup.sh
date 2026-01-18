@@ -27,9 +27,19 @@ echo ""
 
 echo "⏰ Setting up cron job for daily backups at 2 AM..."
 
-# Add cron job for daily backup at 2 AM
-(crontab -l 2>/dev/null; echo "0 2 * * * ~/scripts/daily-backup.sh") | crontab -
-echo "✅ Cron job configured successfully"
+CRON_LINE="0 2 * * * ~/scripts/daily-backup.sh"
+EXISTING_CRON=$(crontab -l 2>/dev/null || true)
+
+if echo "$EXISTING_CRON" | grep -F "$CRON_LINE" > /dev/null; then
+	echo "   - Cron job already exists, skipping creation"
+else
+	if [ -n "$EXISTING_CRON" ]; then
+		printf "%s\n%s\n" "$EXISTING_CRON" "$CRON_LINE" | crontab -
+	else
+		echo "$CRON_LINE" | crontab -
+	fi
+	echo "✅ Cron job configured successfully"
+fi
 echo ""
 
 echo "========================================="

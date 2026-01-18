@@ -106,26 +106,20 @@ echo "Setting up cron job..."
 
 # Build cron entry with proper environment variables
 USER_ID=$(id -u)
-CRON_ENTRY="$CRON_SCHEDULE DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$USER_ID/bus $TARGET_DIR/$RUNTIME_SCRIPT"
+CRON_ENTRY="$CRON_SCHEDULE $TARGET_DIR/$RUNTIME_SCRIPT"
 
-# Check if cron entry already exists
 EXISTING_CRON=$(crontab -l 2>/dev/null || true)
 
-if echo "$EXISTING_CRON" | grep -q "idle-shutdown.sh"; then
-    echo "  Removing existing idle-shutdown cron entry..."
-    EXISTING_CRON=$(echo "$EXISTING_CRON" | grep -v "idle-shutdown.sh")
-fi
-
-# Add new cron entry
-if [ -n "$EXISTING_CRON" ]; then
-    NEW_CRON="$EXISTING_CRON
-$CRON_ENTRY"
+if echo "$EXISTING_CRON" | grep -F "$TARGET_DIR/$RUNTIME_SCRIPT" > /dev/null; then
+    echo "  Cron entry already exists, skipping creation"
 else
-    NEW_CRON="$CRON_ENTRY"
+    if [ -n "$EXISTING_CRON" ]; then
+        printf "%s\n%s\n" "$EXISTING_CRON" "$CRON_ENTRY" | crontab -
+    else
+        echo "$CRON_ENTRY" | crontab -
+    fi
+    echo "  Cron job installed: $CRON_SCHEDULE"
 fi
-
-echo "$NEW_CRON" | crontab -
-echo "  Cron job installed: $CRON_SCHEDULE"
 
 echo ""
 echo "====================================="
