@@ -105,9 +105,12 @@ echo ""
 # Update alias
 echo "⚡ Adding useful shell aliases..."
 echo "   - Adding 'uar' alias for update/upgrade/autoremove..."
-echo 'alias uar="sudo apt update && sudo apt upgrade && sudo apt autoremove -y"' >> ~/.zshrc
-
-echo "✅ Shell aliases added successfully"
+if ! grep -q 'alias uar=' ~/.zshrc 2>/dev/null; then
+    echo 'alias uar="sudo apt update && sudo apt upgrade && sudo apt autoremove -y"' >> ~/.zshrc
+    echo "✅ Shell aliases added successfully"
+else
+    echo "✅ Shell aliases already present"
+fi
 echo ""
 
 echo "========================================="

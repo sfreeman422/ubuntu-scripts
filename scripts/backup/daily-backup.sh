@@ -5,8 +5,10 @@
 # Date: $(date +"%Y-%m-%d")
 
 # Configuration
-BACKUP_BASE_DIR="/media/steve/Backup/ubuntu-desktop"
-SOURCE_DIR="/home/steve"
+# Note: BACKUP_BASE_DIR is set by backup-setup.sh during installation
+# If running manually, adjust this path to your backup destination
+BACKUP_BASE_DIR="${BACKUP_BASE_DIR:-/media/$USER/Backup/ubuntu-desktop}"
+SOURCE_DIR="$HOME"
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="$BACKUP_BASE_DIR/$DATE"
 LOG_FILE="$BACKUP_DIR/backup.log"

@@ -5,10 +5,10 @@
 # Date: $(date +"%Y-%m-%d")
 
 # Set the Downloads directory path
-DOWNLOADS_DIR="/home/steve/Downloads"
+DOWNLOADS_DIR="$HOME/Downloads"
 
 # Log file to track deletions
-LOG_FILE="/home/steve/scripts/downloads-cleanup.log"
+LOG_FILE="$HOME/scripts/downloads-cleanup.log"
 
 # Function to log messages with timestamp
 log_message() {
@@ -17,7 +17,8 @@ log_message() {
 
 # Check if Downloads directory exists
 if [ ! -d "$DOWNLOADS_DIR" ]; then
-    log_message "ERROR: Downloads directory does not exist: $DOWNLOADS_DIR"
+    log_message "Creating Downloads directory: $DOWNLOADS_DIR"
+    mkdir -p "$DOWNLOADS_DIR"
     exit 1
 fi
 

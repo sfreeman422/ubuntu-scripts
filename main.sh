@@ -64,7 +64,7 @@ echo ""
 echo "💾 STEP 7/8: Backup Automation Setup"
 echo "---------------------------------------------"
 echo "⚠️  This will set up automated daily backups at 2:00 AM"
-echo "   Backup destination: /media/steve/Backup/ubuntu-desktop/"
+echo "   (You'll be prompted for backup destination)"
 read -p "Do you want to proceed with backup automation setup? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -99,11 +99,11 @@ echo ""
 echo "💡 Next steps after reboot:"
 echo "   - ZSH and Powerlevel10k configuration will run automatically"
 echo "   - Configure GitHub CLI: gh auth login"
-echo "   - Add yourself to docker group: sudo usermod -aG docker $USER"
+echo "   - Add yourself to docker group: sudo usermod -aG docker $USER (if Docker was installed)"
 echo "   - Set up ProtonMail Bridge if needed"
 echo ""
 echo "📚 Documentation and logs:"
-echo "   - Backup logs: /media/steve/Backup/ubuntu-desktop/backup.log"
+echo "   - Backup logs: Check the directory you specified during setup"
 echo "   - Cron jobs: crontab -l"
 echo ""
 
