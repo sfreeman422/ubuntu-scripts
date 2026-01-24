@@ -365,6 +365,13 @@ is_daytime() {
 main() {
     log "Theme automation script started"
     
+    # Check if GNOME is being used
+    if ! command -v gnome-shell >/dev/null 2>&1; then
+        log "GNOME Shell not detected. Theme automation requires GNOME desktop environment."
+        echo "❌ Error: GNOME Shell not detected. This script requires GNOME."
+        exit 1
+    fi
+    
     # Check if we're running in a graphical environment
     if [[ -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
         log "No graphical environment detected, exiting"

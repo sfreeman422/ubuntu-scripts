@@ -59,10 +59,14 @@ sudo snap refresh --edge gtk-common-themes
 echo "✅ GTK common themes updated successfully"
 echo ""
 
-# Install GNOME Tweaks
-echo "🧰 Installing GNOME Tweaks (gnome-tweaks)..."
-sudo apt install -y gnome-tweaks
-echo "✅ GNOME Tweaks installed successfully"
+# Install GNOME Tweaks (GNOME only)
+if command -v gnome-shell >/dev/null 2>&1; then
+    echo "🧰 Installing GNOME Tweaks (gnome-tweaks)..."
+    sudo apt install -y gnome-tweaks
+    echo "✅ GNOME Tweaks installed successfully"
+else
+    echo "⚠️  GNOME Shell not detected. Skipping GNOME Tweaks installation."
+fi
 echo ""
 
 # Configure time for dual boot with Windows
@@ -74,16 +78,20 @@ timedatectl set-local-rtc 1
 echo "✅ Time configuration updated for dual boot"
 echo ""
 
-# Hide desktop icons
-echo "🖥️  Configuring GNOME desktop settings..."
-echo "   - Hiding desktop icons..."
-gnome-extensions disable ding@rastersoft.com
+# Hide desktop icons (GNOME only)
+if command -v gnome-shell >/dev/null 2>&1; then
+    echo "🖥️  Configuring GNOME desktop settings..."
+    echo "   - Hiding desktop icons..."
+    gnome-extensions disable ding@rastersoft.com 2>/dev/null || true
 
-# Enable minimize on click for the dock
-echo "   - Enabling minimize on click for dock..."
-gsettings set org.gnome.shell.extensions.dash-to-dock click-action 'minimize'
+    # Enable minimize on click for the dock
+    echo "   - Enabling minimize on click for dock..."
+    gsettings set org.gnome.shell.extensions.dash-to-dock click-action 'minimize'
 
-echo "✅ Desktop settings configured successfully"
+    echo "✅ Desktop settings configured successfully"
+else
+    echo "⚠️  GNOME Shell not detected. Skipping GNOME-specific desktop settings."
+fi
 echo ""
 
 # Oh my ZSH
@@ -114,9 +122,11 @@ echo "   ✓ Multimedia codecs"
 echo "   ✓ Automatic security updates"
 echo "   ✓ Developer fonts (Fira Code, Powerline)"
 echo "   ✓ GTK common themes updated"
-echo "   ✓ Gnome tweaks installed"
+if command -v gnome-shell >/dev/null 2>&1; then
+    echo "   ✓ Gnome tweaks installed"
+    echo "   ✓ Desktop settings optimized"
+fi
 echo "   ✓ Time configured for dual boot (local RTC)"
-echo "   ✓ Desktop settings optimized"
 echo "   ✓ Oh My Zsh framework"
 echo "   ✓ Useful shell aliases"
 echo ""

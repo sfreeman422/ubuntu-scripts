@@ -17,7 +17,12 @@ if [[ -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
     echo "❌ No graphical environment detected. This script requires a desktop environment."
     exit 1
 fi
-
+# Check if GNOME is being used
+if ! command -v gnome-shell >/dev/null 2>&1; then
+    echo "❌ GNOME Shell not detected. Theme automation requires GNOME desktop environment."
+    echo "This script uses GNOME-specific settings (gsettings) that are not compatible with other desktop environments."
+    exit 1
+fi
 # Check for required dependencies
 echo "📋 Checking dependencies..."
 
@@ -32,7 +37,7 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 if ! command -v gsettings >/dev/null 2>&1; then
-    MISSING_DEPS+=("gsettings (part of GNOME)")
+    MISSING_DEPS+=(\"gsettings (GNOME required)\")
 fi
 
 if [[ ${#MISSING_DEPS[@]} -gt 0 ]]; then
@@ -49,14 +54,9 @@ if [[ ${#MISSING_DEPS[@]} -gt 0 ]]; then
             "jq")
                 sudo apt install -y jq
                 ;;
-            "gsettings (part of GNOME)")
-                echo "⚠️  gsettings not found. Make sure you're running GNOME desktop environment."
-                echo "If you're using a different desktop environment, this script may not work properly."
-                read -p "Continue anyway? (y/N): " -n 1 -r
-                echo
-                if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                    exit 1
-                fi
+            "gsettings (GNOME required)")
+                echo "❌ gsettings not found. GNOME Shell is required for theme automation."
+                exit 1
                 ;;
         esac
     done
