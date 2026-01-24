@@ -63,7 +63,15 @@ echo ""
 # Backup setup
 echo "💾 STEP 7/8: Backup Automation Setup"
 echo "---------------------------------------------"
-./scripts/backup/backup-setup.sh
+echo "⚠️  This will set up automated daily backups at 2:00 AM"
+echo "   Backup destination: /media/steve/Backup/ubuntu-desktop/"
+read -p "Do you want to proceed with backup automation setup? (y/N): " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    ./scripts/backup/backup-setup.sh
+else
+    echo "⏭️  Skipping backup automation setup"
+fi
 echo ""
 
 # Downloads cleanup setup
