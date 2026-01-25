@@ -2,8 +2,19 @@
 
 # Ubuntu Theme Automation Script
 # Automatically switches between light and dark themes based on sunrise/sunset
+# Supports: GNOME, XFCE
 # Author: Steve Freeman
-# Date: 2025-08-10
+# Date: 2025-01-24
+
+# Source the desktop environment library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$(cd "$SCRIPT_DIR/../../lib" && pwd)"
+if [[ -f "$LIB_DIR/desktop-environment.sh" ]]; then
+    source "$LIB_DIR/desktop-environment.sh"
+else
+    echo "❌ Error: desktop-environment.sh not found at $LIB_DIR"
+    exit 1
+fi
 
 LOG_FILE="$HOME/.theme-automation.log"
 CACHE_DIR="$HOME/.cache/theme-automation"
@@ -137,104 +148,9 @@ utc_to_local() {
     date -d "$utc_time" +%s
 }
 
-# Function to get current theme
-get_current_theme() {
-    gsettings get org.gnome.desktop.interface gtk-theme | tr -d "'"
-}
+# Note: get_current_theme() is now provided by the library
 
-# Function to set Firefox theme preference
-set_firefox_theme() {
-    local use_dark_theme="$1"
-    
-    # Check if Firefox snap is installed
-    if ! snap list firefox >/dev/null 2>&1; then
-        log "Firefox snap not detected, skipping Firefox theme configuration"
-        return 0
-    fi
-    
-    # Find Firefox profile directories (snap version)
-    local firefox_snap_dir="$HOME/snap/firefox/common/.mozilla/firefox"
-    
-    if [[ ! -d "$firefox_snap_dir" ]]; then
-        log "Firefox snap profile directory not found, Firefox may not have been run yet"
-        return 0
-    fi
-    
-    # Find profiles.ini to get the correct profile path
-    local profiles_ini="$firefox_snap_dir/profiles.ini"
-    if [[ ! -f "$profiles_ini" ]]; then
-        log "Firefox profiles.ini not found, skipping Firefox configuration"
-        return 0
-    fi
-    
-    # Parse profiles.ini to find default profile
-    local default_profile=""
-    while IFS= read -r line; do
-        if [[ "$line" =~ ^Path=(.*)$ ]]; then
-            local profile_path="${BASH_REMATCH[1]}"
-            # Check if this profile directory exists
-            if [[ -d "$firefox_snap_dir/$profile_path" ]]; then
-                default_profile="$firefox_snap_dir/$profile_path"
-                break
-            fi
-        fi
-    done < "$profiles_ini"
-    
-    if [[ -z "$default_profile" ]]; then
-        log "No valid Firefox profile found, skipping Firefox configuration"
-        return 0
-    fi
-    
-    log "Configuring Firefox theme for profile: $default_profile"
-    
-    # Create user.js file with theme preference
-    user_js="$default_profile/user.js"
-    
-    # Create or update user.js
-    if [[ -f "$user_js" ]]; then
-        # Remove existing ui.systemUsesDarkTheme preference
-        sed -i '/user_pref("ui\.systemUsesDarkTheme"/d' "$user_js"
-        sed -i '/user_pref("layout\.css\.prefers-color-scheme\.content-override"/d' "$user_js"
-    fi
-    
-    # Add the theme preferences
-    {
-        echo "// Theme automation - auto-generated on $(date)"
-        echo "user_pref(\"ui.systemUsesDarkTheme\", $use_dark_theme);"
-        if [[ "$use_dark_theme" == "true" ]]; then
-            echo "user_pref(\"layout.css.prefers-color-scheme.content-override\", 0);" # Dark
-        else
-            echo "user_pref(\"layout.css.prefers-color-scheme.content-override\", 1);" # Light
-        fi
-    } >> "$user_js"
-    
-    log "Firefox theme preference updated: ui.systemUsesDarkTheme = $use_dark_theme"
-    
-    # Try to signal Firefox to reload preferences if it's running
-    if pgrep -f "firefox" >/dev/null 2>&1; then
-        log "Firefox is running - preferences will take effect on next restart"
-    fi
-}
-
-# Function to configure snap themes
-configure_snap_themes() {
-    local theme_name="$1"
-    
-    log "Configuring snap themes for: $theme_name"
-    
-    # Set theme environment variables for snaps (no sudo required)
-    if [[ "$theme_name" == *"dark"* ]]; then
-        log "Setting dark theme environment for snaps"
-        # Set dark theme preference
-        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-    else
-        log "Setting light theme environment for snaps"
-        # Set light theme preference  
-        gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
-    fi
-    
-    log "Snap theme environment configured (no restart required)"
-}
+# Note: set_firefox_theme() is now provided by the library
 
 # Function to restart snap applications for theme changes
 restart_snap_apps() {
@@ -273,27 +189,29 @@ setup_snap_connections() {
 
 # Function to set light theme
 set_light_theme() {
-    log "Switching to light theme..."
+    local de=$(detect_desktop_environment)
+    log "Switching to light theme on $de..."
     
-    # Set GTK theme
-    gsettings set org.gnome.desktop.interface gtk-theme 'Yaru'
-    
-    # Set icon theme
-    gsettings set org.gnome.desktop.interface icon-theme 'Yaru'
-    
-    # Set cursor theme
-    gsettings set org.gnome.desktop.interface cursor-theme 'Yaru'
-    
-    # Set shell theme (if using GNOME Shell)
-    if command -v gnome-shell >/dev/null 2>&1; then
-        gsettings set org.gnome.shell.extensions.user-theme name 'Yaru'
-    fi
-    
-    # Set window manager theme
-    gsettings set org.gnome.desktop.wm.preferences theme 'Yaru'
-    
-    # Configure snap themes
-    configure_snap_themes "Yaru"
+    case "$de" in
+        gnome)
+            # GNOME Yaru theme
+            gsettings set org.gnome.desktop.interface gtk-theme 'Yaru'
+            gsettings set org.gnome.desktop.interface icon-theme 'Yaru'
+            gsettings set org.gnome.desktop.interface cursor-theme 'Yaru'
+            gsettings set org.gnome.desktop.wm.preferences theme 'Yaru'
+            gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
+            
+            if command -v gnome-shell >/dev/null 2>&1; then
+                gsettings set org.gnome.shell.extensions.user-theme name 'Yaru' 2>/dev/null || true
+            fi
+            ;;
+        xfce)
+            # XFCE Xfce (default light theme)
+            xfconf-query -c xsettings -p /Net/ThemeName -s "Xfce" 2>/dev/null || true
+            xfconf-query -c xsettings -p /Net/IconThemeName -s "Xfce" 2>/dev/null || true
+            xfconf-query -c xfwm4 -p /general/theme -s "Xfce" 2>/dev/null || true
+            ;;
+    esac
     
     # Configure Firefox for light theme
     set_firefox_theme "false"
@@ -303,27 +221,29 @@ set_light_theme() {
 
 # Function to set dark theme
 set_dark_theme() {
-    log "Switching to dark theme..."
+    local de=$(detect_desktop_environment)
+    log "Switching to dark theme on $de..."
     
-    # Set GTK theme
-    gsettings set org.gnome.desktop.interface gtk-theme 'Yaru-dark'
-    
-    # Set icon theme
-    gsettings set org.gnome.desktop.interface icon-theme 'Yaru-dark'
-    
-    # Set cursor theme
-    gsettings set org.gnome.desktop.interface cursor-theme 'Yaru'
-    
-    # Set shell theme (if using GNOME Shell)
-    if command -v gnome-shell >/dev/null 2>&1; then
-        gsettings set org.gnome.shell.extensions.user-theme name 'Yaru-dark'
-    fi
-    
-    # Set window manager theme
-    gsettings set org.gnome.desktop.wm.preferences theme 'Yaru-dark'
-    
-    # Configure snap themes
-    configure_snap_themes "Yaru-dark"
+    case "$de" in
+        gnome)
+            # GNOME Yaru dark theme
+            gsettings set org.gnome.desktop.interface gtk-theme 'Yaru-dark'
+            gsettings set org.gnome.desktop.interface icon-theme 'Yaru-dark'
+            gsettings set org.gnome.desktop.interface cursor-theme 'Yaru'
+            gsettings set org.gnome.desktop.wm.preferences theme 'Yaru-dark'
+            gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+            
+            if command -v gnome-shell >/dev/null 2>&1; then
+                gsettings set org.gnome.shell.extensions.user-theme name 'Yaru-dark' 2>/dev/null || true
+            fi
+            ;;
+        xfce)
+            # XFCE Xfce-dark theme
+            xfconf-query -c xsettings -p /Net/ThemeName -s "Xfce-dark" 2>/dev/null || true
+            xfconf-query -c xsettings -p /Net/IconThemeName -s "Xfce-dark" 2>/dev/null || true
+            xfconf-query -c xfwm4 -p /general/theme -s "Xfce-dark" 2>/dev/null || true
+            ;;
+    esac
     
     # Configure Firefox for dark theme
     set_firefox_theme "true"
@@ -365,26 +285,27 @@ is_daytime() {
 main() {
     log "Theme automation script started"
     
-    # Check if GNOME is being used
-    if ! command -v gnome-shell >/dev/null 2>&1; then
-        log "GNOME Shell not detected. Theme automation requires GNOME desktop environment."
-        echo "❌ Error: GNOME Shell not detected. This script requires GNOME."
-        exit 1
-    fi
+    local de=$(detect_desktop_environment)
+    log "Detected desktop environment: $de"
     
     # Check if we're running in a graphical environment
-    if [[ -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
+    if ! has_display; then
         log "No graphical environment detected, exiting"
         exit 1
     fi
     
     # Check if required commands are available
-    for cmd in curl jq gsettings; do
-        if ! command -v "$cmd" >/dev/null 2>&1; then
-            log "Required command '$cmd' not found. Please install it first."
-            exit 1
-        fi
-    done
+    if ! check_required_commands >/dev/null 2>&1; then
+        log "Required command not found. Please install dependencies."
+        exit 1
+    fi
+    
+    # Check if a supported desktop environment is running
+    if [[ "$de" != "gnome" && "$de" != "xfce" ]]; then
+        log "Unsupported desktop environment: $de. This script supports GNOME and XFCE."
+        echo "❌ Error: Unsupported desktop environment ($de). This script supports GNOME and XFCE."
+        exit 1
+    fi
     
     current_theme=$(get_current_theme)
     log "Current theme: $current_theme"
@@ -421,6 +342,8 @@ case "${1:-}" in
         exit 0
         ;;
     --status)
+        local de=$(detect_desktop_environment)
+        echo "Desktop Environment: $de"
         if is_daytime; then
             echo "Daytime - Light theme should be active"
         else

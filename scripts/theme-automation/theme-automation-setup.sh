@@ -2,10 +2,20 @@
 
 # Theme Automation Setup Script
 # Sets up automatic theme switching based on sunrise/sunset
+# Supports: GNOME, XFCE
 # Author: Steve Freeman
-# Date: 2025-08-10
+# Date: 2025-01-24
 
+# Source the desktop environment library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$(cd "$SCRIPT_DIR/../../lib" && pwd)"
+if [[ -f "$LIB_DIR/desktop-environment.sh" ]]; then
+    source "$LIB_DIR/desktop-environment.sh"
+else
+    echo "❌ Error: desktop-environment.sh not found at $LIB_DIR"
+    exit 1
+fi
+
 THEME_SCRIPT="$SCRIPT_DIR/theme-automation.sh"
 SYSTEMD_USER_DIR="$HOME/.config/systemd/user"
 
@@ -13,17 +23,22 @@ echo "🎨 Setting up Ubuntu Theme Automation..."
 echo "=========================================="
 
 # Check if we're in a graphical environment
-if [[ -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
+if ! has_display; then
     echo "❌ No graphical environment detected. This script requires a desktop environment."
     exit 1
 fi
-# Check if GNOME is being used
-if ! command -v gnome-shell >/dev/null 2>&1; then
-    echo "❌ GNOME Shell not detected. Theme automation requires GNOME desktop environment."
-    echo "This script uses GNOME-specific settings (gsettings) that are not compatible with other desktop environments."
+
+# Check which desktop environment is being used
+de=$(detect_desktop_environment)
+echo "📋 Detected desktop environment: $de"
+
+# Check if a supported desktop environment is running
+if [[ "$de" != "gnome" && "$de" != "xfce" ]]; then
+    echo "❌ Unsupported desktop environment: $de"
+    echo "This script supports GNOME and XFCE desktop environments."
     exit 1
 fi
-# Check for required dependencies
+
 echo "📋 Checking dependencies..."
 
 MISSING_DEPS=()
@@ -36,9 +51,18 @@ if ! command -v jq >/dev/null 2>&1; then
     MISSING_DEPS+=("jq")
 fi
 
-if ! command -v gsettings >/dev/null 2>&1; then
-    MISSING_DEPS+=(\"gsettings (GNOME required)\")
-fi
+case "$de" in
+    gnome)
+        if ! command -v gsettings >/dev/null 2>&1; then
+            MISSING_DEPS+=(\"gsettings (GNOME required)\")
+        fi
+        ;;
+    xfce)
+        if ! command -v xfconf-query >/dev/null 2>&1; then
+            MISSING_DEPS+=(\"xfconf-query (XFCE required)\")
+        fi
+        ;;
+esac
 
 if [[ ${#MISSING_DEPS[@]} -gt 0 ]]; then
     echo "❌ Missing required dependencies: ${MISSING_DEPS[*]}"
@@ -55,8 +79,11 @@ if [[ ${#MISSING_DEPS[@]} -gt 0 ]]; then
                 sudo apt install -y jq
                 ;;
             "gsettings (GNOME required)")
-                echo "❌ gsettings not found. GNOME Shell is required for theme automation."
+                echo "❌ gsettings not found. GNOME Shell is required for GNOME theme automation."
                 exit 1
+                ;;
+            "xfconf-query (XFCE required)")
+                sudo apt install -y xfconf
                 ;;
         esac
     done

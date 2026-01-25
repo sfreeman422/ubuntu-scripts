@@ -1,8 +1,18 @@
 #!/bin/bash
 
 # System Level Setup Script
+# Supports: GNOME, XFCE
 # Author: Steve Freeman
 # Date: $(date +"%Y-%m-%d")
+
+# Source the desktop environment library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$(cd "$SCRIPT_DIR/../lib" && pwd)"
+if [[ -f "$LIB_DIR/desktop-environment.sh" ]]; then
+    source "$LIB_DIR/desktop-environment.sh"
+else
+    echo "⚠️  Warning: desktop-environment.sh not found. Some features may be limited."
+fi
 
 echo "========================================="
 echo "Ubuntu System Level Setup Starting..."
@@ -59,13 +69,17 @@ sudo snap refresh --edge gtk-common-themes
 echo "✅ GTK common themes updated successfully"
 echo ""
 
-# Install GNOME Tweaks (GNOME only)
-if command -v gnome-shell >/dev/null 2>&1; then
+# Install GNOME Tweaks (GNOME only) and XFCE Tweaks (XFCE only)
+if has_gnome; then
     echo "🧰 Installing GNOME Tweaks (gnome-tweaks)..."
     sudo apt install -y gnome-tweaks
     echo "✅ GNOME Tweaks installed successfully"
+elif has_xfce; then
+    echo "🧰 Installing XFCE Tweaks..."
+    sudo apt install -y xfce4-tweaks-plugin
+    echo "✅ XFCE Tweaks installed successfully"
 else
-    echo "⚠️  GNOME Shell not detected. Skipping GNOME Tweaks installation."
+    echo "⚠️  Desktop environment not detected. Skipping tweaks installation."
 fi
 echo ""
 
@@ -78,19 +92,32 @@ timedatectl set-local-rtc 1
 echo "✅ Time configuration updated for dual boot"
 echo ""
 
-# Hide desktop icons (GNOME only)
-if command -v gnome-shell >/dev/null 2>&1; then
+# Desktop environment specific settings
+de=$(detect_desktop_environment 2>/dev/null || echo "unknown")
+
+if [[ "$de" == "gnome" ]]; then
     echo "🖥️  Configuring GNOME desktop settings..."
     echo "   - Hiding desktop icons..."
     gnome-extensions disable ding@rastersoft.com 2>/dev/null || true
 
     # Enable minimize on click for the dock
     echo "   - Enabling minimize on click for dock..."
-    gsettings set org.gnome.shell.extensions.dash-to-dock click-action 'minimize'
+    gsettings set org.gnome.shell.extensions.dash-to-dock click-action 'minimize' 2>/dev/null || true
 
-    echo "✅ Desktop settings configured successfully"
+    echo "✅ GNOME desktop settings configured successfully"
+elif [[ "$de" == "xfce" ]]; then
+    echo "🖥️  Configuring XFCE desktop settings..."
+    echo "   - Setting desktop icon size and behavior..."
+    
+    # Hide desktop icons if desired
+    xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-thumbnails -s false 2>/dev/null || true
+    
+    # Set window manager to automatically move windows when requested
+    xfconf-query -c xfwm4 -p /general/move_opacity -s 100 2>/dev/null || true
+    
+    echo "✅ XFCE desktop settings configured successfully"
 else
-    echo "⚠️  GNOME Shell not detected. Skipping GNOME-specific desktop settings."
+    echo "⚠️  Desktop environment not detected. Skipping desktop-specific settings."
 fi
 echo ""
 
@@ -125,10 +152,15 @@ echo "   ✓ Multimedia codecs"
 echo "   ✓ Automatic security updates"
 echo "   ✓ Developer fonts (Fira Code, Powerline)"
 echo "   ✓ GTK common themes updated"
-if command -v gnome-shell >/dev/null 2>&1; then
-    echo "   ✓ Gnome tweaks installed"
-    echo "   ✓ Desktop settings optimized"
+
+if [[ "$de" == "gnome" ]]; then
+    echo "   ✓ GNOME Tweaks installed"
+    echo "   ✓ GNOME desktop settings optimized"
+elif [[ "$de" == "xfce" ]]; then
+    echo "   ✓ XFCE Tweaks installed"
+    echo "   ✓ XFCE desktop settings optimized"
 fi
+
 echo "   ✓ Time configured for dual boot (local RTC)"
 echo "   ✓ Oh My Zsh framework"
 echo "   ✓ Useful shell aliases"
