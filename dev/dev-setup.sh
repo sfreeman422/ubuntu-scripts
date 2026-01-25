@@ -72,7 +72,7 @@ echo ""
 
 # Install postgres
 echo "🐘 Installing PostgreSQL database server..."
-sudo apt install postgresql postgresql-contrib
+sudo apt install -y postgresql postgresql-contrib
 echo "✅ PostgreSQL installed successfully"
 echo ""
 
@@ -97,28 +97,24 @@ sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
 echo "   - Installing Redis..."
 sudo apt-get update
-sudo apt-get install redis
+sudo apt-get install -y redis
 echo "✅ Redis installed successfully"
 echo ""
 
-# install cursor
-echo "💻 Installing Cursor..."
-echo "   - Downloading Cursor .deb package..."
-CURSOR_DEB_URL=$(curl -s https://api.github.com/repos/getcursor/cursor/releases/latest | grep "browser_download_url.*\.deb" | cut -d '"' -f 4 | head -n 1)
-if [ -n "$CURSOR_DEB_URL" ]; then
-  echo "   - Found latest release, downloading..."
-  wget -qO /tmp/cursor.deb "$CURSOR_DEB_URL"
-  if [ -f /tmp/cursor.deb ]; then
-    echo "   - Installing Cursor..."
-    sudo dpkg -i /tmp/cursor.deb || sudo apt-get install -f -y
-    rm /tmp/cursor.deb
-    echo "✅ Cursor installed successfully"
-  else
-    echo "⚠️  Download failed. Please install manually from https://cursor.sh/downloads"
-  fi
+# Install VS Code
+echo "💻 Installing VS Code..."
+echo "   - Adding VS Code apt repository..."
+if [ ! -f /etc/apt/sources.list.d/vscode.list ]; then
+  curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/microsoft.gpg > /dev/null
+  echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+  echo "   - VS Code repository added."
 else
-  echo "⚠️  Could not find download URL. Please install manually from https://cursor.sh/downloads"
+  echo "   - VS Code repository already present, skipping addition."
 fi
+echo "   - Updating apt and installing VS Code..."
+sudo apt update
+sudo apt install -y code
+echo "✅ VS Code installed successfully"
 echo ""
 
 # Set up docker
@@ -127,7 +123,7 @@ echo "   - Removing old Docker packages..."
 for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
 echo "   - Setting up Docker repository..."
 sudo apt-get update
-sudo apt-get install ca-certificates curl
+sudo apt-get install -y ca-certificates curl
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -188,7 +184,7 @@ echo "   ✓ Claude Code - AI coding assistant CLI"
 echo "   ✓ PostgreSQL - Database server"
 echo "   ✓ DBeaver - Database client"
 echo "   ✓ Redis - In-memory database"
-echo "   ✓ Cursor - Code editor"
+echo "   ✓ VS Code - Code editor"
 echo "   ✓ Docker - Container platform"
 echo "   ✓ Insomnia - API client"
 echo "   ✓ AWS CLI - Amazon Web Services CLI"
