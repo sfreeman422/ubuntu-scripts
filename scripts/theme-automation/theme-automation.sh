@@ -158,33 +158,7 @@ restart_snap_apps() {
     log "If apps don't reflect theme changes, restart them manually"
     
     # Note: We removed automatic app killing to avoid interrupting user work
-    # Modern snap apps should pick up the color-scheme changes automatically
-}
-
-# Function to setup snap interface connections (requires sudo, run once)
-setup_snap_connections() {
-    log "Setting up snap interface connections (requires sudo)..."
-    
-    # Check if gtk-common-themes is installed
-    if ! snap list gtk-common-themes >/dev/null 2>&1; then
-        echo "⚠️  gtk-common-themes not installed. Installing..."
-        sudo snap install gtk-common-themes
-    fi
-    
-    # Connect gtk-common-themes to snaps that need it
-    local snap_apps=("firefox" "code" "discord" "spotify" "chromium" "thunderbird")
-    
-    for app in "${snap_apps[@]}"; do
-        if snap list "$app" >/dev/null 2>&1; then
-            echo "Connecting gtk-common-themes to $app..."
-            sudo snap connect "$app:gtk-3-themes" gtk-common-themes:gtk-3-themes 2>/dev/null || true
-            sudo snap connect "$app:icon-themes" gtk-common-themes:icon-themes 2>/dev/null || true
-            sudo snap connect "$app:sound-themes" gtk-common-themes:sound-themes 2>/dev/null || true
-            echo "✅ $app connected"
-        fi
-    done
-    
-    log "Snap interface connections completed"
+    # Modern apps should pick up theme changes automatically
 }
 
 # Function to set light theme
@@ -354,19 +328,19 @@ case "${1:-}" in
         # Check Firefox configuration
         echo ""
         echo "Firefox Configuration:"
-        if snap list firefox >/dev/null 2>&1; then
-            echo "  Firefox snap: Installed"
-            firefox_snap_dir="$HOME/snap/firefox/common/.mozilla/firefox"
-            if [[ -d "$firefox_snap_dir" ]]; then
+        if command -v firefox >/dev/null 2>&1; then
+            echo "  Firefox: Installed"
+            firefox_dir="$HOME/.mozilla/firefox"
+            if [[ -d "$firefox_dir" ]]; then
                 echo "  Profile directory: Found"
-                profiles_ini="$firefox_snap_dir/profiles.ini"
+                profiles_ini="$firefox_dir/profiles.ini"
                 if [[ -f "$profiles_ini" ]]; then
                     echo "  profiles.ini: Found"
                     # Find the user.js file
                     while IFS= read -r line; do
                         if [[ "$line" =~ ^Path=(.*)$ ]]; then
                             profile_path="${BASH_REMATCH[1]}"
-                            user_js="$firefox_snap_dir/$profile_path/user.js"
+                            user_js="$firefox_dir/$profile_path/user.js"
                             if [[ -f "$user_js" ]]; then
                                 echo "  user.js: Found at $user_js"
                                 if grep -q "ui.systemUsesDarkTheme" "$user_js"; then
@@ -388,7 +362,7 @@ case "${1:-}" in
                 echo "  Profile directory: Not found"
             fi
         else
-            echo "  Firefox snap: Not installed"
+            echo "  Firefox: Not installed"
         fi
         exit 0
         ;;
@@ -403,20 +377,12 @@ case "${1:-}" in
         fi
         exit 0
         ;;
-    --snap-setup)
-        echo "Setting up snap theme connections (requires sudo)..."
-        setup_snap_connections
-        echo "Snap theme connections configured"
-        echo "Theme automation will now work without requiring authentication"
-        exit 0
-        ;;
     --help)
-        echo "Usage: $0 [--light|--dark|--status|--firefox-only|--snap-setup|--help]"
-        echo "  --light        Force light theme (includes Firefox and snaps)"
-        echo "  --dark         Force dark theme (includes Firefox and snaps)"
+        echo "Usage: $0 [--light|--dark|--status|--firefox-only|--help]"
+        echo "  --light        Force light theme (includes Firefox)"
+        echo "  --dark         Force dark theme (includes Firefox)"
         echo "  --status       Show current status and Firefox config"
         echo "  --firefox-only Configure Firefox theme only"
-        echo "  --snap-setup   Setup snap theme connections (one-time, requires sudo)"
         echo "  --help         Show this help"
         echo "  (no args)      Auto-detect and set appropriate theme"
         exit 0

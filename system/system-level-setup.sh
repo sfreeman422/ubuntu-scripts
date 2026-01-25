@@ -34,7 +34,7 @@ echo ""
 
 # install htop
 echo "📊 Installing htop system monitor..."
-sudo snap install htop -y
+sudo apt install -y htop
 
 echo "✅ htop installed successfully"
 echo ""
@@ -63,10 +63,10 @@ echo "✅ Developer fonts installed successfully"
 echo ""
 
 # Install/update GTK common themes
-echo "🎨 Installing/updating GTK common themes..."
-sudo snap refresh --edge gtk-common-themes
+echo "🎨 Installing GTK common themes..."
+sudo apt install -y gtk-common-themes
 
-echo "✅ GTK common themes updated successfully"
+echo "✅ GTK common themes installed successfully"
 echo ""
 
 # Install GNOME Tweaks (GNOME only) and XFCE Tweaks (XFCE only)

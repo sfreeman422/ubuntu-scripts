@@ -9,12 +9,12 @@ echo "Application Setup Starting..."
 echo "========================================="
 
 # Install spotify discord chromium
-echo "📱 Installing snap applications..."
+echo "📱 Installing applications via apt..."
 echo "   - Spotify (music streaming)"
 echo "   - Discord (chat/voice)"
 echo "   - Chromium (web browser)"
-snap install spotify discord chromium
-echo "✅ Snap applications installed successfully"
+sudo apt install -y spotify-client discord chromium-browser
+echo "✅ Applications installed successfully"
 echo ""
 
 # Install Slack (apt)

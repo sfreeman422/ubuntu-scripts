@@ -171,17 +171,17 @@ set_theme() {
 set_firefox_theme() {
     local use_dark_theme="$1"  # "true" or "false"
     
-    if ! snap list firefox >/dev/null 2>&1; then
+    if ! command -v firefox >/dev/null 2>&1; then
         return 0
     fi
     
-    local firefox_snap_dir="$HOME/snap/firefox/common/.mozilla/firefox"
+    local firefox_dir="$HOME/.mozilla/firefox"
     
-    if [[ ! -d "$firefox_snap_dir" ]]; then
+    if [[ ! -d "$firefox_dir" ]]; then
         return 0
     fi
     
-    local profiles_ini="$firefox_snap_dir/profiles.ini"
+    local profiles_ini="$firefox_dir/profiles.ini"
     if [[ ! -f "$profiles_ini" ]]; then
         return 0
     fi
@@ -190,8 +190,8 @@ set_firefox_theme() {
     while IFS= read -r line; do
         if [[ "$line" =~ ^Path=(.*)$ ]]; then
             local profile_path="${BASH_REMATCH[1]}"
-            if [[ -d "$firefox_snap_dir/$profile_path" ]]; then
-                default_profile="$firefox_snap_dir/$profile_path"
+            if [[ -d "$firefox_dir/$profile_path" ]]; then
+                default_profile="$firefox_dir/$profile_path"
                 break
             fi
         fi

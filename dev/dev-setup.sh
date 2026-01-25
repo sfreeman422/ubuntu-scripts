@@ -84,7 +84,7 @@ echo ""
 
 # Install dbeaver
 echo "🗄️  Installing DBeaver database client..."
-sudo snap install dbeaver-ce
+sudo apt install -y dbeaver-ce
 echo "✅ DBeaver installed successfully"
 echo ""
 
@@ -164,8 +164,8 @@ echo ""
 
 # Install AWS CLI
 echo "☁️  Installing AWS CLI..."
-echo "   - Installing from snap store..."
-sudo snap install aws-cli --classic
+echo "   - Installing from apt repository..."
+sudo apt install -y awscli
 echo "✅ AWS CLI installed successfully"
 echo ""
 
