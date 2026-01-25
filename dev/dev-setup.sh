@@ -50,25 +50,6 @@ nvm install --lts
 echo "✅ Node.js LTS installed successfully"
 echo ""
 
-# Install pnpm
-echo "📦 Installing pnpm package manager..."
-curl -fsSL https://get.pnpm.io/install.sh | sh -
-echo "✅ pnpm installed successfully"
-echo ""
-
-# Add npm -> pnpm aliases
-echo "🔗 Adding npm to pnpm aliases..."
-echo 'alias "npm i"="pnpm install"' >> ~/.zshrc
-echo 'alias "npm install"="pnpm install"' >> ~/.zshrc
-echo "✅ npm aliases added (npm i, npm install -> pnpm install)"
-echo ""
-
-# Install Claude Code
-echo "🤖 Installing Claude Code CLI..."
-curl -fsSL https://claude.ai/install.sh | sh
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
-echo "✅ Claude Code installed successfully"
-echo ""
 
 # Install postgres
 echo "🐘 Installing PostgreSQL database server..."
@@ -84,7 +65,7 @@ echo ""
 
 # Install dbeaver
 echo "🗄️  Installing DBeaver database client..."
-sudo apt install -y dbeaver-ce
+snap install dbeaver-ce --classic
 echo "✅ DBeaver installed successfully"
 echo ""
 
