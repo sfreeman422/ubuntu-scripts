@@ -34,6 +34,18 @@ check_command() {
     fi
 }
 
+is_supported_release() {
+    local version_id="$1"
+    case "$version_id" in
+        24.04|26.04)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 echo "============================================="
 echo "Ubuntu + GNOME Preflight Smoke Test"
 echo "============================================="
@@ -43,6 +55,11 @@ if [[ -f /etc/os-release ]]; then
     source /etc/os-release
     if [[ "${ID:-}" == "ubuntu" ]]; then
         pass "OS detected as Ubuntu (${PRETTY_NAME:-unknown})"
+        if is_supported_release "${VERSION_ID:-unknown}"; then
+            pass "Ubuntu release ${VERSION_ID:-unknown} is in validated support set (24.04, 26.04)"
+        else
+            warn "Ubuntu release ${VERSION_ID:-unknown} is not explicitly validated (best-effort mode)"
+        fi
     else
         fail "OS is not Ubuntu (detected: ${PRETTY_NAME:-unknown})"
     fi

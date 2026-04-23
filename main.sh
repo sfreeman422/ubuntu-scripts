@@ -7,6 +7,44 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR" || exit 1
 
+UBUNTU_LIB="$SCRIPT_DIR/lib/ubuntu-release.sh"
+if [[ -f "$UBUNTU_LIB" ]]; then
+    # shellcheck disable=SC1090
+    source "$UBUNTU_LIB"
+fi
+
+DRY_RUN=false
+DRY_RUN_STRICT=false
+
+usage() {
+    echo "Usage: $0 [--dry-run] [--strict] [--help]"
+    echo ""
+    echo "  --dry-run   Validate Ubuntu + GNOME readiness without installing anything"
+    echo "  --strict    In dry-run mode, treat warnings as failures"
+    echo "  --help      Show this help"
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dry-run)
+            DRY_RUN=true
+            ;;
+        --strict)
+            DRY_RUN_STRICT=true
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "❌ Unknown option: $1"
+            usage
+            exit 1
+            ;;
+    esac
+    shift
+done
+
 preflight_checks() {
     if [[ -f /etc/os-release ]]; then
         # shellcheck disable=SC1091
@@ -24,9 +62,35 @@ preflight_checks() {
         echo "❌ GNOME Shell not detected. This setup supports Ubuntu with GNOME only."
         exit 1
     fi
+
+    if declare -f is_supported_ubuntu_release >/dev/null 2>&1; then
+        if is_supported_ubuntu_release; then
+            echo "✅ Ubuntu release $(get_ubuntu_version_id) is supported."
+        else
+            echo "⚠️  Ubuntu release $(get_ubuntu_version_id) is not explicitly validated by this repo."
+            echo "   Supported targets: 24.04 and 26.04"
+            echo "   Continuing in best-effort mode..."
+        fi
+    fi
 }
 
 preflight_checks
+
+if [[ "$DRY_RUN" == "true" ]]; then
+    echo ""
+    echo "🧪 Running dry-run validation mode..."
+    if [[ "$DRY_RUN_STRICT" == "true" ]]; then
+        echo "🔒 Strict mode enabled (warnings will fail the run)."
+        bash "$SCRIPT_DIR/scripts/ubuntu-dry-run.sh" --strict
+    else
+        bash "$SCRIPT_DIR/scripts/ubuntu-dry-run.sh"
+    fi
+    exit $?
+fi
+
+if [[ "$DRY_RUN_STRICT" == "true" ]]; then
+    echo "⚠️  --strict has no effect without --dry-run."
+fi
 
 echo "============================================="
 echo "🚀 Ubuntu First-Time Setup Starting..."

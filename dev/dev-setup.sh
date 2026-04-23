@@ -4,6 +4,15 @@
 # Author: Steve Freeman
 # Date: $(date +"%Y-%m-%d")
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$(cd "$SCRIPT_DIR/../lib" && pwd)"
+if [[ -f "$LIB_DIR/ubuntu-release.sh" ]]; then
+  # shellcheck disable=SC1091
+  source "$LIB_DIR/ubuntu-release.sh"
+fi
+
+UBUNTU_CODENAME_VALUE="$(get_ubuntu_codename 2>/dev/null || echo "unknown")"
+
 echo "========================================="
 echo "Development Tools Setup Starting..."
 echo "========================================="
@@ -72,10 +81,10 @@ echo ""
 # Install Redis
 echo "📊 Installing Redis in-memory database..."
 echo "   - Adding Redis package repository..."
-sudo apt-get install lsb-release curl gpg -y 
+sudo apt-get install curl gpg -y 
 curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
 sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb ${UBUNTU_CODENAME_VALUE} main" | sudo tee /etc/apt/sources.list.d/redis.list
 echo "   - Installing Redis..."
 sudo apt-get update
 sudo apt-get install -y redis
@@ -110,7 +119,7 @@ sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyring
 sudo chmod a+r /etc/apt/keyrings/docker.asc
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+  ${UBUNTU_CODENAME_VALUE} stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 echo "   - Installing Docker Engine..."
 sudo apt-get update
