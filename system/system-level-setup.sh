@@ -11,7 +11,9 @@ LIB_DIR="$(cd "$SCRIPT_DIR/../lib" && pwd)"
 if [[ -f "$LIB_DIR/gnome-environment.sh" ]]; then
     source "$LIB_DIR/gnome-environment.sh"
 else
-    echo "⚠️  Warning: gnome-environment.sh not found. Some features may be limited."
+    echo "❌ Error: required library '$LIB_DIR/gnome-environment.sh' not found." >&2
+    echo "This setup script depends on functions defined in gnome-environment.sh and cannot continue safely." >&2
+    exit 1
 fi
 
 echo "========================================="

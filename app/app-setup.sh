@@ -5,13 +5,6 @@
 # Date: $(date +"%Y-%m-%d")
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LIB_DIR="$(cd "$SCRIPT_DIR/../lib" && pwd)"
-if [[ -f "$LIB_DIR/ubuntu-release.sh" ]]; then
-	# shellcheck disable=SC1091
-	source "$LIB_DIR/ubuntu-release.sh"
-fi
-
-UBUNTU_CODENAME_VALUE="$(get_ubuntu_codename 2>/dev/null || echo "unknown")"
 
 install_discord() {
 	if apt-cache show discord >/dev/null 2>&1; then
@@ -46,7 +39,12 @@ echo ""
 
 # Install Discord with apt->snap fallback
 echo "💬 Installing Discord..."
-install_discord || true
+DISCORD_INSTALL_SUCCESS=false
+if install_discord; then
+	DISCORD_INSTALL_SUCCESS=true
+else
+	echo "⚠️  Discord installation was skipped or failed. You can install it manually later."
+fi
 echo ""
 
 # Install Slack (direct .deb)
@@ -102,7 +100,11 @@ echo "========================================="
 echo ""
 echo "📋 Applications installed:"
 echo "   ✓ Spotify - Music streaming"
-echo "   ✓ Discord - Chat and voice communication"
+if [[ "$DISCORD_INSTALL_SUCCESS" == "true" ]]; then
+	echo "   ✓ Discord - Chat and voice communication"
+else
+	echo "   ⚠️  Discord - skipped (install manually)"
+fi
 echo "   ✓ Chromium - Web browser"
 echo "   ✓ Slack - Team communication"
 echo "   ✓ Steam - Gaming platform"

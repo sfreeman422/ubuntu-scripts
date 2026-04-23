@@ -102,7 +102,9 @@ After=graphical-session.target
 
 [Service]
 Type=oneshot
-ExecStart=$THEME_SCRIPT
+Environment=DISPLAY=${DISPLAY:-:0}
+Environment=WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}
+ExecStart=/usr/bin/env bash -lc '"$THEME_SCRIPT"'
 
 [Install]
 WantedBy=default.target
@@ -111,11 +113,11 @@ EOF
 # Create systemd timer file for periodic checks
 cat > "$SYSTEMD_USER_DIR/theme-automation.timer" << EOF
 [Unit]
-Description=Run Ubuntu Theme Automation every 1 minute
+Description=Run Ubuntu Theme Automation every 15 minutes
 Requires=theme-automation.service
 
 [Timer]
-OnCalendar=*:0/1
+OnCalendar=*:0/15
 Persistent=true
 
 [Install]
@@ -129,7 +131,7 @@ systemctl --user daemon-reload
 systemctl --user enable theme-automation.timer
 systemctl --user start theme-automation.timer
 
-echo "⚡ Enabled automatic theme switching (checks every 1 minute)"
+echo "⚡ Enabled automatic theme switching (checks every 15 minutes)"
 
 # Run the script once immediately to set the current theme
 echo "🔄 Running initial theme check..."
@@ -141,7 +143,7 @@ echo ""
 echo "📋 What was installed:"
 echo "   • Theme automation script: $THEME_SCRIPT"
 echo "   • Systemd service: theme-automation.service"
-echo "   • Systemd timer: theme-automation.timer (runs every 1 minute)"
+echo "   • Systemd timer: theme-automation.timer (runs every 15 minutes)"
 echo ""
 echo "🎛️  Manual controls:"
 echo "   • Force light theme: $THEME_SCRIPT --light"

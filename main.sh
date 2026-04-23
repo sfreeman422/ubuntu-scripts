@@ -208,6 +208,7 @@ run_step "🎮 STEP 5/8: Gaming Environment Setup" "./scripts/gaming/gaming.sh"
 run_step "🎨 STEP 6/8: Theme Automation Setup" "./scripts/theme-automation/theme-automation-setup.sh"
 
 # Backup setup
+BACKUP_RAN=false
 echo "💾 STEP 7/8: Backup Automation Setup"
 echo "---------------------------------------------"
 echo "⚠️  This will set up automated daily backups at 2:00 AM"
@@ -216,6 +217,7 @@ read -p "Do you want to proceed with backup automation setup? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     run_step "💾 STEP 7/8: Backup Automation Setup" "./scripts/backup/backup-setup.sh" "true"
+    BACKUP_RAN=true
 else
     echo "⏭️  Skipping backup automation setup"
     record_step_result "💾 STEP 7/8: Backup Automation Setup" "skipped"
@@ -237,7 +239,11 @@ echo "   ✅ Modern ZSH theme configured"
 echo "   ✅ Essential applications installed"
 echo "   ✅ Gaming environment configured"
 echo "   ✅ Automatic theme switching enabled"
-echo "   ✅ Automated backup system active"
+if [[ "$BACKUP_RAN" == "true" ]]; then
+    echo "   ✅ Automated backup system active"
+else
+    echo "   ⏭️  Automated backup system skipped"
+fi
 echo "   ✅ Downloads cleanup automation enabled"
 echo ""
 echo "🔄 IMPORTANT: Please reboot your system to ensure all changes take effect"
