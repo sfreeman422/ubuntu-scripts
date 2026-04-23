@@ -23,9 +23,27 @@ echo ""
 
 # Install Powerlevel10k theme
 echo "🎨 Installing Powerlevel10k ZSH theme..."
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
+ZSH_CUSTOM_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+if [[ ! -d "$ZSH_CUSTOM_DIR/themes" ]]; then
+	echo "❌ Oh My Zsh themes directory not found at $ZSH_CUSTOM_DIR/themes"
+	echo "   Run system setup first to install Oh My Zsh."
+	exit 1
+fi
+
+if [[ ! -d "$ZSH_CUSTOM_DIR/themes/powerlevel10k" ]]; then
+	git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$ZSH_CUSTOM_DIR/themes/powerlevel10k"
+else
+	echo "   - Powerlevel10k already cloned, skipping"
+fi
 echo "⚙️  Configuring ZSH to use Powerlevel10k theme..."
-echo 'ZSH_THEME="powerlevel10k/powerlevel10k"' >> ~/.zshrc
+if grep -q '^ZSH_THEME="powerlevel10k/powerlevel10k"$' ~/.zshrc 2>/dev/null; then
+	echo "   - ZSH theme already configured"
+else
+	sed -i 's/^ZSH_THEME=.*/ZSH_THEME="powerlevel10k\/powerlevel10k"/' ~/.zshrc 2>/dev/null || true
+	if ! grep -q '^ZSH_THEME="powerlevel10k/powerlevel10k"$' ~/.zshrc 2>/dev/null; then
+		echo 'ZSH_THEME="powerlevel10k/powerlevel10k"' >> ~/.zshrc
+	fi
+fi
 echo "✅ Powerlevel10k theme installed and configured"
 echo ""
 

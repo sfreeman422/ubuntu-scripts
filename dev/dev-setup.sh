@@ -4,6 +4,15 @@
 # Author: Steve Freeman
 # Date: $(date +"%Y-%m-%d")
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$(cd "$SCRIPT_DIR/../lib" && pwd)"
+if [[ -f "$LIB_DIR/ubuntu-release.sh" ]]; then
+  # shellcheck disable=SC1091
+  source "$LIB_DIR/ubuntu-release.sh"
+fi
+
+UBUNTU_CODENAME_VALUE="$(get_ubuntu_codename 2>/dev/null || echo "unknown")"
+
 echo "========================================="
 echo "Development Tools Setup Starting..."
 echo "========================================="
@@ -22,19 +31,27 @@ echo ""
 
 #Install github-cli
 echo "🐙 Installing GitHub CLI..."
-(type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
-&& sudo mkdir -p -m 755 /etc/apt/keyrings \
-&& wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-&& sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-&& sudo apt update \
-&& sudo apt install gh -y
+if ! {
+  (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
+  && sudo mkdir -p -m 755 /etc/apt/keyrings \
+  && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+  && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+  && sudo apt update \
+  && sudo apt install gh -y
+}; then
+  echo "❌ GitHub CLI installation failed"
+  exit 1
+fi
 echo "✅ GitHub CLI installed successfully"
 echo ""
 
 # Install NVM
 echo "📦 Installing Node Version Manager (NVM)..."
-wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+if ! wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash; then
+  echo "❌ NVM installation failed"
+  exit 1
+fi
 echo "✅ NVM downloaded and installed"
 echo ""
 
@@ -46,7 +63,15 @@ export NVM_DIR="$HOME/.nvm"
 
 # Install latest LTS Node version
 echo "🚀 Installing latest LTS Node.js version..."
-nvm install --lts
+if ! command -v nvm >/dev/null 2>&1; then
+  echo "❌ nvm command not available after installation"
+  exit 1
+fi
+
+if ! nvm install --lts; then
+  echo "❌ Node.js LTS installation failed"
+  exit 1
+fi
 echo "✅ Node.js LTS installed successfully"
 echo ""
 
@@ -65,17 +90,25 @@ echo ""
 
 # Install dbeaver
 echo "🗄️  Installing DBeaver database client..."
-snap install dbeaver-ce --classic
-echo "✅ DBeaver installed successfully"
+if command -v snap >/dev/null 2>&1; then
+  if sudo snap install dbeaver-ce --classic; then
+    echo "✅ DBeaver installed successfully"
+  else
+    echo "❌ DBeaver installation failed"
+    exit 1
+  fi
+else
+  echo "⚠️  snap not found. Skipping DBeaver installation."
+fi
 echo ""
 
 # Install Redis
 echo "📊 Installing Redis in-memory database..."
 echo "   - Adding Redis package repository..."
-sudo apt-get install lsb-release curl gpg -y 
+sudo apt-get install curl gpg -y 
 curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
 sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb ${UBUNTU_CODENAME_VALUE} main" | sudo tee /etc/apt/sources.list.d/redis.list
 echo "   - Installing Redis..."
 sudo apt-get update
 sudo apt-get install -y redis
@@ -110,7 +143,7 @@ sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyring
 sudo chmod a+r /etc/apt/keyrings/docker.asc
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+  ${UBUNTU_CODENAME_VALUE} stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 echo "   - Installing Docker Engine..."
 sudo apt-get update

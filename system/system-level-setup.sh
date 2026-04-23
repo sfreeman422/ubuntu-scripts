@@ -1,17 +1,19 @@
 #!/bin/bash
 
 # System Level Setup Script
-# Supports: GNOME, XFCE
+# Supports: GNOME
 # Author: Steve Freeman
 # Date: $(date +"%Y-%m-%d")
 
-# Source the desktop environment library
+# Source the GNOME environment library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="$(cd "$SCRIPT_DIR/../lib" && pwd)"
-if [[ -f "$LIB_DIR/desktop-environment.sh" ]]; then
-    source "$LIB_DIR/desktop-environment.sh"
+if [[ -f "$LIB_DIR/gnome-environment.sh" ]]; then
+    source "$LIB_DIR/gnome-environment.sh"
 else
-    echo "⚠️  Warning: desktop-environment.sh not found. Some features may be limited."
+    echo "❌ Error: required library '$LIB_DIR/gnome-environment.sh' not found." >&2
+    echo "This setup script depends on functions defined in gnome-environment.sh and cannot continue safely." >&2
+    exit 1
 fi
 
 echo "========================================="
@@ -69,17 +71,13 @@ sudo apt install -y gtk-common-themes
 echo "✅ GTK common themes installed successfully"
 echo ""
 
-# Install GNOME Tweaks (GNOME only) and XFCE Tweaks (XFCE only)
+# Install GNOME Tweaks
 if has_gnome; then
     echo "🧰 Installing GNOME Tweaks (gnome-tweaks)..."
     sudo apt install -y gnome-tweaks
     echo "✅ GNOME Tweaks installed successfully"
-elif has_xfce; then
-    echo "🧰 Installing XFCE Tweaks..."
-    sudo apt install -y xfce4-tweaks-plugin
-    echo "✅ XFCE Tweaks installed successfully"
 else
-    echo "⚠️  Desktop environment not detected. Skipping tweaks installation."
+    echo "⚠️  GNOME not detected. Skipping tweaks installation."
 fi
 echo ""
 
@@ -87,7 +85,6 @@ echo ""
 echo "⏰ Configuring system time for dual boot compatibility..."
 echo "   - Setting hardware clock to use local time (Windows compatibility)..."
 sudo timedatectl set-local-rtc 1 --adjust-system-clock
-timedatectl set-local-rtc 1
 
 echo "✅ Time configuration updated for dual boot"
 echo ""
@@ -105,19 +102,8 @@ if [[ "$de" == "gnome" ]]; then
     gsettings set org.gnome.shell.extensions.dash-to-dock click-action 'minimize' 2>/dev/null || true
 
     echo "✅ GNOME desktop settings configured successfully"
-elif [[ "$de" == "xfce" ]]; then
-    echo "🖥️  Configuring XFCE desktop settings..."
-    echo "   - Setting desktop icon size and behavior..."
-    
-    # Hide desktop icons if desired
-    xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-thumbnails -s false 2>/dev/null || true
-    
-    # Set window manager to automatically move windows when requested
-    xfconf-query -c xfwm4 -p /general/move_opacity -s 100 2>/dev/null || true
-    
-    echo "✅ XFCE desktop settings configured successfully"
 else
-    echo "⚠️  Desktop environment not detected. Skipping desktop-specific settings."
+    echo "⚠️  GNOME not detected. Skipping desktop-specific settings."
 fi
 echo ""
 
@@ -156,9 +142,6 @@ echo "   ✓ GTK common themes updated"
 if [[ "$de" == "gnome" ]]; then
     echo "   ✓ GNOME Tweaks installed"
     echo "   ✓ GNOME desktop settings optimized"
-elif [[ "$de" == "xfce" ]]; then
-    echo "   ✓ XFCE Tweaks installed"
-    echo "   ✓ XFCE desktop settings optimized"
 fi
 
 echo "   ✓ Time configured for dual boot (local RTC)"

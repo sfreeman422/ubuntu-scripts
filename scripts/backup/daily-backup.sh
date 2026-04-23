@@ -23,11 +23,19 @@ log_message() {
 # Create backup directory if it doesn't exist
 mkdir -p "$BACKUP_DIR"
 
+if [ ! -d "$BACKUP_BASE_DIR" ]; then
+    log_message "ERROR: Backup base directory does not exist: $BACKUP_BASE_DIR"
+    exit 1
+fi
+
 log_message "Starting daily backup of home directory"
 
 # Clean up old backups (keep only last MAX_BACKUPS)
 log_message "Cleaning up old backup directories (keeping last $MAX_BACKUPS)"
-cd "$BACKUP_BASE_DIR"
+if ! cd "$BACKUP_BASE_DIR"; then
+    log_message "ERROR: Unable to access backup base directory: $BACKUP_BASE_DIR"
+    exit 1
+fi
 
 # Clean up old backup directories
 find . -maxdepth 1 -type d ! -name "." -printf "%T@ %f\n" | \

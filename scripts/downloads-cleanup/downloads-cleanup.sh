@@ -42,11 +42,8 @@ find "$DOWNLOADS_DIR" -mindepth 1 -type d -empty -delete -print | while read dir
     log_message "Deleted empty directory: $dir"
 done
 
-# Find and delete directories older than 30 days (that are not empty)
-log_message "Deleting directories older than 30 days..."
-find "$DOWNLOADS_DIR" -type d -mtime +30 -exec rm -rf {} \; -print 2>/dev/null | while read dir; do
-    log_message "Deleted directory: $dir"
-done
+# Do not recursively delete non-empty directories by age.
+# A parent directory can be old while containing recent files.
 
 # Count files and folders after deletion
 AFTER_COUNT=$(find "$DOWNLOADS_DIR" -mindepth 1 -type f | wc -l)

@@ -2,16 +2,16 @@
 
 # Theme Automation Test Script
 # Tests the theme automation functionality
-# Supports: GNOME, XFCE
+# Supports: GNOME
 # Author: Steve Freeman
 
-# Source the desktop environment library
+# Source the GNOME environment library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="$(cd "$SCRIPT_DIR/../../lib" && pwd)"
-if [[ -f "$LIB_DIR/desktop-environment.sh" ]]; then
-    source "$LIB_DIR/desktop-environment.sh"
+if [[ -f "$LIB_DIR/gnome-environment.sh" ]]; then
+    source "$LIB_DIR/gnome-environment.sh"
 else
-    echo "❌ Error: desktop-environment.sh not found at $LIB_DIR"
+    echo "❌ Error: gnome-environment.sh not found at $LIB_DIR"
     exit 1
 fi
 
@@ -22,8 +22,14 @@ echo "========================"
 
 # Detect desktop environment
 de=$(detect_desktop_environment)
-echo "🖥️  Desktop Environment: $de"
+echo "🖥️  Desktop Session: $de"
 echo ""
+
+if [[ "$de" != "gnome" ]]; then
+    echo "❌ Unsupported desktop session: $de"
+    echo "This test script supports GNOME on Ubuntu."
+    exit 1
+fi
 
 # Check if theme script exists and is executable
 if [[ ! -f "$THEME_SCRIPT" ]]; then

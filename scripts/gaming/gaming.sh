@@ -4,6 +4,16 @@
 # Author: Steve Freeman
 # Date: $(date +"%Y-%m-%d")
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$(cd "$SCRIPT_DIR/../../lib" && pwd)"
+if [[ -f "$LIB_DIR/ubuntu-release.sh" ]]; then
+	# shellcheck disable=SC1091
+	source "$LIB_DIR/ubuntu-release.sh"
+fi
+
+UBUNTU_CODENAME_VALUE="$(get_ubuntu_codename 2>/dev/null || echo "unknown")"
+WINEHQ_CODENAME="$(get_winehq_codename "$UBUNTU_CODENAME_VALUE" 2>/dev/null || echo "noble")"
+
 echo "========================================="
 echo "Gaming Environment Setup Starting..."
 echo "========================================="
@@ -21,7 +31,10 @@ sudo mkdir -pm755 /etc/apt/keyrings
 echo "   - Adding Wine repository key..."
 sudo wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key
 echo "   - Adding Wine repository sources..."
-sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources
+if [[ "$WINEHQ_CODENAME" != "$UBUNTU_CODENAME_VALUE" ]]; then
+	echo "   - WineHQ source for '${UBUNTU_CODENAME_VALUE}' not found; using '${WINEHQ_CODENAME}'"
+fi
+sudo wget -NP /etc/apt/sources.list.d/ "https://dl.winehq.org/wine-builds/ubuntu/dists/${WINEHQ_CODENAME}/winehq-${WINEHQ_CODENAME}.sources"
 
 echo "   - Updating package lists..."
 sudo apt update 
