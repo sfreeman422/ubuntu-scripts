@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Desktop Environment Detection Library
-# Provides functions to detect and work with different desktop environments
-# Supports: GNOME, XFCE, and generic X11
+# Provides GNOME-focused helper functions for Ubuntu scripts
+# Supports: GNOME
 # Author: Steve Freeman
 # Date: 2025-01-24
 
@@ -15,10 +15,6 @@ detect_desktop_environment() {
                 echo "gnome"
                 return 0
                 ;;
-            xfce|xubuntu)
-                echo "xfce"
-                return 0
-                ;;
         esac
     fi
     
@@ -27,10 +23,6 @@ detect_desktop_environment() {
         case "$XDG_CURRENT_DESKTOP" in
             *GNOME*)
                 echo "gnome"
-                return 0
-                ;;
-            *XFCE*)
-                echo "xfce"
                 return 0
                 ;;
         esac
@@ -42,13 +34,8 @@ detect_desktop_environment() {
         return 0
     fi
     
-    if command -v xfce4-session >/dev/null 2>&1; then
-        echo "xfce"
-        return 0
-    fi
-    
-    # Default to generic if we can't detect
-    echo "generic"
+    # Return unknown if we can't detect GNOME
+    echo "unknown"
     return 1
 }
 
@@ -68,24 +55,12 @@ get_gnome_gtk_theme() {
     fi
 }
 
-# Get the current GTK theme for XFCE
-get_xfce_gtk_theme() {
-    if command -v xfconf-query >/dev/null 2>&1; then
-        xfconf-query -c xsettings -p /Net/ThemeName 2>/dev/null || echo "Xfce"
-    else
-        echo "Xfce"
-    fi
-}
-
-# Get current theme (works for both GNOME and XFCE)
+# Get current theme
 get_current_theme() {
     local de=$(detect_desktop_environment)
     case "$de" in
         gnome)
             get_gnome_gtk_theme
-            ;;
-        xfce)
-            get_xfce_gtk_theme
             ;;
         *)
             echo "Unknown"
@@ -128,27 +103,6 @@ set_gnome_theme() {
     return 0
 }
 
-# Set XFCE theme (light/dark)
-set_xfce_theme() {
-    local theme_type="$1"  # "light" or "dark"
-    
-    if ! command -v xfconf-query >/dev/null 2>&1; then
-        return 1
-    fi
-    
-    if [[ "$theme_type" == "light" ]]; then
-        xfconf-query -c xsettings -p /Net/ThemeName -s "Xfce" 2>/dev/null || true
-        xfconf-query -c xsettings -p /Net/IconThemeName -s "Xfce" 2>/dev/null || true
-        xfconf-query -c xfwm4 -p /general/theme -s "Xfce" 2>/dev/null || true
-    else
-        xfconf-query -c xsettings -p /Net/ThemeName -s "Xfce-dark" 2>/dev/null || true
-        xfconf-query -c xsettings -p /Net/IconThemeName -s "Xfce-dark" 2>/dev/null || true
-        xfconf-query -c xfwm4 -p /general/theme -s "Xfce-dark" 2>/dev/null || true
-    fi
-    
-    return 0
-}
-
 # Set theme for current desktop environment
 set_theme() {
     local theme_type="$1"  # "light" or "dark"
@@ -158,16 +112,13 @@ set_theme() {
         gnome)
             set_gnome_theme "$theme_type"
             ;;
-        xfce)
-            set_xfce_theme "$theme_type"
-            ;;
         *)
             return 1
             ;;
     esac
 }
 
-# Configure Firefox theme (works for both DE)
+# Configure Firefox theme
 set_firefox_theme() {
     local use_dark_theme="$1"  # "true" or "false"
     
@@ -221,26 +172,17 @@ set_firefox_theme() {
     return 0
 }
 
-# Configure snap themes (works for both DE)
+# Configure snap themes
 configure_snap_themes() {
     local theme_type="$1"  # "light" or "dark"
-    local de=$(detect_desktop_environment)
-    
-    case "$de" in
-        gnome)
-            if command -v gsettings >/dev/null 2>&1; then
-                if [[ "$theme_type" == "light" ]]; then
-                    gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
-                else
-                    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-                fi
-            fi
-            ;;
-        xfce)
-            # XFCE doesn't have a system-wide color-scheme setting like GNOME
-            # but the theme change above will be picked up by snaps
-            ;;
-    esac
+
+    if command -v gsettings >/dev/null 2>&1; then
+        if [[ "$theme_type" == "light" ]]; then
+            gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
+        else
+            gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+        fi
+    fi
     
     return 0
 }
@@ -254,28 +196,16 @@ has_display() {
     fi
 }
 
-# Check if a desktop environment is installed
+# Check if GNOME is installed
 has_gnome() {
     command -v gnome-shell >/dev/null 2>&1
 }
 
-has_xfce() {
-    command -v xfce4-session >/dev/null 2>&1
-}
-
-# Get required commands for current desktop environment
+# Get required commands
 get_required_commands() {
-    local de=$(detect_desktop_environment)
     local commands=("curl" "jq")
-    
-    case "$de" in
-        gnome)
-            commands+=("gsettings")
-            ;;
-        xfce)
-            commands+=("xfconf-query")
-            ;;
-    esac
+
+    commands+=("gsettings")
     
     echo "${commands[@]}"
 }
@@ -299,7 +229,7 @@ check_required_commands() {
     return 0
 }
 
-# Install missing dependencies for current desktop environment
+# Install missing dependencies
 install_missing_dependencies() {
     local missing_commands=$(check_required_commands)
     
@@ -321,9 +251,6 @@ install_missing_dependencies() {
             gsettings)
                 echo "Error: gsettings not found. GNOME Shell is required."
                 return 1
-                ;;
-            xfconf-query)
-                sudo apt install -y xfconf
                 ;;
         esac
     done

@@ -4,6 +4,30 @@
 # Author: Steve Freeman
 # Date: $(date +"%Y-%m-%d")
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR" || exit 1
+
+preflight_checks() {
+    if [[ -f /etc/os-release ]]; then
+        # shellcheck disable=SC1091
+        source /etc/os-release
+        if [[ "$ID" != "ubuntu" ]]; then
+            echo "❌ This setup is intended for Ubuntu only. Detected: ${PRETTY_NAME:-unknown}"
+            exit 1
+        fi
+    else
+        echo "❌ Unable to verify OS. /etc/os-release not found."
+        exit 1
+    fi
+
+    if ! command -v gnome-shell >/dev/null 2>&1; then
+        echo "❌ GNOME Shell not detected. This setup supports Ubuntu with GNOME only."
+        exit 1
+    fi
+}
+
+preflight_checks
+
 echo "============================================="
 echo "🚀 Ubuntu First-Time Setup Starting..."
 echo "============================================="
@@ -18,6 +42,8 @@ echo "   • Automatic theme switching (light/dark)"
 echo "   • Automated backup system"
 echo "   • Downloads folder cleanup"
 echo ""
+echo "🖥️  Target environment: Ubuntu + GNOME"
+echo ""
 echo "⏳ Estimated time: 15-30 minutes"
 echo "💡 You may be prompted for sudo password during installation"
 echo ""
@@ -25,19 +51,19 @@ read -p "Press Enter to continue..."
 echo ""
 
 # System-level setup
-echo "🔧 STEP 1/6: System Level Setup"
+echo "🔧 STEP 1/8: System Level Setup"
 echo "---------------------------------------------"
 ./system/system-level-setup.sh
 echo ""
 
 # Development setup  
-echo "💻 STEP 2/6: Development Tools Setup"
+echo "💻 STEP 2/8: Development Tools Setup"
 echo "---------------------------------------------"
 ./dev/dev-setup.sh
 echo ""
 
 # ZSH theme setup
-echo "🎨 STEP 3/6: ZSH Theme & Fonts Setup"
+echo "🎨 STEP 3/8: ZSH Theme & Fonts Setup"
 echo "---------------------------------------------"
 ./dev/zsh-theme.sh
 echo ""

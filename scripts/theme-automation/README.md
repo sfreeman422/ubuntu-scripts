@@ -2,13 +2,17 @@
 
 Automatically switches Ubuntu between light and dark themes based on sunrise and sunset times for your location.
 
+## Scope
+
+This automation is intended for Ubuntu with GNOME only.
+
 ## Features
 
 - **Location Detection**: Determines your location using IP geolocation (with fallback services)
 - **Sunrise/Sunset API**: Uses sunrise-sunset.org API to get accurate solar times
 - **Automatic Switching**: Light theme during day, dark theme during night
 - **Caching**: Caches location and sunrise/sunset data to minimize API calls
-- **Systemd Integration**: Runs automatically every 15 minutes using systemd timers
+- **Systemd Integration**: Runs automatically every 1 minute using systemd timers
 - **Manual Override**: Command-line options to force light or dark themes
 - **Logging**: Detailed logs for troubleshooting
 
@@ -25,7 +29,7 @@ cd scripts/theme-automation
 
 ### Automatic Mode
 
-Once installed, the script runs automatically every 15 minutes and switches themes based on sunrise/sunset.
+Once installed, the script runs automatically every 1 minute and switches themes based on sunrise/sunset.
 
 ### Manual Controls
 

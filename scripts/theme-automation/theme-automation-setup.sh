@@ -2,17 +2,17 @@
 
 # Theme Automation Setup Script
 # Sets up automatic theme switching based on sunrise/sunset
-# Supports: GNOME, XFCE
+# Supports: GNOME
 # Author: Steve Freeman
 # Date: 2025-01-24
 
-# Source the desktop environment library
+# Source the GNOME environment library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="$(cd "$SCRIPT_DIR/../../lib" && pwd)"
-if [[ -f "$LIB_DIR/desktop-environment.sh" ]]; then
-    source "$LIB_DIR/desktop-environment.sh"
+if [[ -f "$LIB_DIR/gnome-environment.sh" ]]; then
+    source "$LIB_DIR/gnome-environment.sh"
 else
-    echo "❌ Error: desktop-environment.sh not found at $LIB_DIR"
+    echo "❌ Error: gnome-environment.sh not found at $LIB_DIR"
     exit 1
 fi
 
@@ -24,18 +24,18 @@ echo "=========================================="
 
 # Check if we're in a graphical environment
 if ! has_display; then
-    echo "❌ No graphical environment detected. This script requires a desktop environment."
+    echo "❌ No graphical environment detected. This script requires GNOME on Ubuntu."
     exit 1
 fi
 
-# Check which desktop environment is being used
+# Check which desktop session is being used
 de=$(detect_desktop_environment)
-echo "📋 Detected desktop environment: $de"
+echo "📋 Detected desktop session: $de"
 
-# Check if a supported desktop environment is running
-if [[ "$de" != "gnome" && "$de" != "xfce" ]]; then
-    echo "❌ Unsupported desktop environment: $de"
-    echo "This script supports GNOME and XFCE desktop environments."
+# Check if GNOME is running
+if [[ "$de" != "gnome" ]]; then
+    echo "❌ Unsupported desktop session: $de"
+    echo "This script supports GNOME on Ubuntu."
     exit 1
 fi
 
@@ -51,18 +51,9 @@ if ! command -v jq >/dev/null 2>&1; then
     MISSING_DEPS+=("jq")
 fi
 
-case "$de" in
-    gnome)
-        if ! command -v gsettings >/dev/null 2>&1; then
-            MISSING_DEPS+=(\"gsettings (GNOME required)\")
-        fi
-        ;;
-    xfce)
-        if ! command -v xfconf-query >/dev/null 2>&1; then
-            MISSING_DEPS+=(\"xfconf-query (XFCE required)\")
-        fi
-        ;;
-esac
+if ! command -v gsettings >/dev/null 2>&1; then
+    MISSING_DEPS+=("gsettings (GNOME required)")
+fi
 
 if [[ ${#MISSING_DEPS[@]} -gt 0 ]]; then
     echo "❌ Missing required dependencies: ${MISSING_DEPS[*]}"
@@ -81,9 +72,6 @@ if [[ ${#MISSING_DEPS[@]} -gt 0 ]]; then
             "gsettings (GNOME required)")
                 echo "❌ gsettings not found. GNOME Shell is required for GNOME theme automation."
                 exit 1
-                ;;
-            "xfconf-query (XFCE required)")
-                sudo apt install -y xfconf
                 ;;
         esac
     done
@@ -142,7 +130,7 @@ systemctl --user daemon-reload
 systemctl --user enable theme-automation.timer
 systemctl --user start theme-automation.timer
 
-echo "⚡ Enabled automatic theme switching (checks every 15 minutes)"
+echo "⚡ Enabled automatic theme switching (checks every 1 minute)"
 
 # Run the script once immediately to set the current theme
 echo "🔄 Running initial theme check..."
@@ -154,7 +142,7 @@ echo ""
 echo "📋 What was installed:"
 echo "   • Theme automation script: $THEME_SCRIPT"
 echo "   • Systemd service: theme-automation.service"
-echo "   • Systemd timer: theme-automation.timer (runs every 1 minutes)"
+echo "   • Systemd timer: theme-automation.timer (runs every 1 minute)"
 echo ""
 echo "🎛️  Manual controls:"
 echo "   • Force light theme: $THEME_SCRIPT --light"

@@ -2,17 +2,17 @@
 
 # Ubuntu Theme Automation Script
 # Automatically switches between light and dark themes based on sunrise/sunset
-# Supports: GNOME, XFCE
+# Supports: GNOME
 # Author: Steve Freeman
 # Date: 2025-01-24
 
-# Source the desktop environment library
+# Source the GNOME environment library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="$(cd "$SCRIPT_DIR/../../lib" && pwd)"
-if [[ -f "$LIB_DIR/desktop-environment.sh" ]]; then
-    source "$LIB_DIR/desktop-environment.sh"
+if [[ -f "$LIB_DIR/gnome-environment.sh" ]]; then
+    source "$LIB_DIR/gnome-environment.sh"
 else
-    echo "❌ Error: desktop-environment.sh not found at $LIB_DIR"
+    echo "❌ Error: gnome-environment.sh not found at $LIB_DIR"
     exit 1
 fi
 
@@ -165,27 +165,11 @@ restart_snap_apps() {
 set_light_theme() {
     local de=$(detect_desktop_environment)
     log "Switching to light theme on $de..."
-    
-    case "$de" in
-        gnome)
-            # GNOME Yaru theme
-            gsettings set org.gnome.desktop.interface gtk-theme 'Yaru'
-            gsettings set org.gnome.desktop.interface icon-theme 'Yaru'
-            gsettings set org.gnome.desktop.interface cursor-theme 'Yaru'
-            gsettings set org.gnome.desktop.wm.preferences theme 'Yaru'
-            gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
-            
-            if command -v gnome-shell >/dev/null 2>&1; then
-                gsettings set org.gnome.shell.extensions.user-theme name 'Yaru' 2>/dev/null || true
-            fi
-            ;;
-        xfce)
-            # XFCE Xfce (default light theme)
-            xfconf-query -c xsettings -p /Net/ThemeName -s "Xfce" 2>/dev/null || true
-            xfconf-query -c xsettings -p /Net/IconThemeName -s "Xfce" 2>/dev/null || true
-            xfconf-query -c xfwm4 -p /general/theme -s "Xfce" 2>/dev/null || true
-            ;;
-    esac
+
+    if ! set_theme "light"; then
+        log "Failed to set GNOME light theme"
+        return 1
+    fi
     
     # Configure Firefox for light theme
     set_firefox_theme "false"
@@ -197,27 +181,11 @@ set_light_theme() {
 set_dark_theme() {
     local de=$(detect_desktop_environment)
     log "Switching to dark theme on $de..."
-    
-    case "$de" in
-        gnome)
-            # GNOME Yaru dark theme
-            gsettings set org.gnome.desktop.interface gtk-theme 'Yaru-dark'
-            gsettings set org.gnome.desktop.interface icon-theme 'Yaru-dark'
-            gsettings set org.gnome.desktop.interface cursor-theme 'Yaru'
-            gsettings set org.gnome.desktop.wm.preferences theme 'Yaru-dark'
-            gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-            
-            if command -v gnome-shell >/dev/null 2>&1; then
-                gsettings set org.gnome.shell.extensions.user-theme name 'Yaru-dark' 2>/dev/null || true
-            fi
-            ;;
-        xfce)
-            # XFCE Xfce-dark theme
-            xfconf-query -c xsettings -p /Net/ThemeName -s "Xfce-dark" 2>/dev/null || true
-            xfconf-query -c xsettings -p /Net/IconThemeName -s "Xfce-dark" 2>/dev/null || true
-            xfconf-query -c xfwm4 -p /general/theme -s "Xfce-dark" 2>/dev/null || true
-            ;;
-    esac
+
+    if ! set_theme "dark"; then
+        log "Failed to set GNOME dark theme"
+        return 1
+    fi
     
     # Configure Firefox for dark theme
     set_firefox_theme "true"
@@ -260,7 +228,7 @@ main() {
     log "Theme automation script started"
     
     local de=$(detect_desktop_environment)
-    log "Detected desktop environment: $de"
+    log "Detected desktop session: $de"
     
     # Check if we're running in a graphical environment
     if ! has_display; then
@@ -274,10 +242,10 @@ main() {
         exit 1
     fi
     
-    # Check if a supported desktop environment is running
-    if [[ "$de" != "gnome" && "$de" != "xfce" ]]; then
-        log "Unsupported desktop environment: $de. This script supports GNOME and XFCE."
-        echo "❌ Error: Unsupported desktop environment ($de). This script supports GNOME and XFCE."
+    # Check if GNOME is running
+    if [[ "$de" != "gnome" ]]; then
+        log "Unsupported desktop session: $de. This script supports GNOME on Ubuntu."
+        echo "❌ Error: Unsupported desktop session ($de). This script supports GNOME on Ubuntu."
         exit 1
     fi
     
@@ -316,8 +284,8 @@ case "${1:-}" in
         exit 0
         ;;
     --status)
-        local de=$(detect_desktop_environment)
-        echo "Desktop Environment: $de"
+        de=$(detect_desktop_environment)
+        echo "Desktop Session: $de"
         if is_daytime; then
             echo "Daytime - Light theme should be active"
         else
