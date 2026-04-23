@@ -103,7 +103,6 @@ After=graphical-session.target
 [Service]
 Type=oneshot
 ExecStart=$THEME_SCRIPT
-Environment=DISPLAY=:0
 
 [Install]
 WantedBy=default.target

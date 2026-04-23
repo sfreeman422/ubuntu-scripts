@@ -11,12 +11,14 @@ echo "========================================="
 
 echo "🗂️  Setting up automated Downloads folder cleanup..."
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # setup auto delete downloads after 30 days
 echo "   - Creating scripts directory..."
 mkdir -p ~/scripts
 
 echo "   - Installing cleanup script..."
-cp ./downloads-cleanup.sh ~/scripts/downloads-cleanup.sh
+cp "$SCRIPT_DIR/downloads-cleanup.sh" ~/scripts/downloads-cleanup.sh
 chmod +x ~/scripts/downloads-cleanup.sh
 
 echo "⏰ Setting up cron job to run every 5 minutes..."

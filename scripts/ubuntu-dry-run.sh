@@ -41,24 +41,65 @@ WARN_COUNT=0
 FAIL_COUNT=0
 OPTIONAL_WARN_COUNT=0
 
+declare -a CHECK_LABELS=()
+declare -a CHECK_STATUSES=()
+
+record_check() {
+    local check_label="$1"
+    local check_status="$2"
+    CHECK_LABELS+=("$check_label")
+    CHECK_STATUSES+=("$check_status")
+}
+
+print_check_summary() {
+    local i
+    local total=${#CHECK_LABELS[@]}
+
+    echo ""
+    echo "Detailed Check Results:"
+    for ((i = 0; i < total; i++)); do
+        case "${CHECK_STATUSES[$i]}" in
+            passed)
+                echo "  ✅ ${CHECK_LABELS[$i]}"
+                ;;
+            warning)
+                echo "  ⚠️  ${CHECK_LABELS[$i]}"
+                ;;
+            optional-warning)
+                echo "  ℹ️  ${CHECK_LABELS[$i]}"
+                ;;
+            failed)
+                echo "  ❌ ${CHECK_LABELS[$i]}"
+                ;;
+            *)
+                echo "  ⚠️  ${CHECK_LABELS[$i]} (unknown status: ${CHECK_STATUSES[$i]})"
+                ;;
+        esac
+    done
+}
+
 pass() {
     echo "✅ $1"
     PASS_COUNT=$((PASS_COUNT + 1))
+    record_check "$1" "passed"
 }
 
 warn() {
     echo "⚠️  $1"
     WARN_COUNT=$((WARN_COUNT + 1))
+    record_check "$1" "warning"
 }
 
 fail() {
     echo "❌ $1"
     FAIL_COUNT=$((FAIL_COUNT + 1))
+    record_check "$1" "failed"
 }
 
 optional_warn() {
     echo "ℹ️  $1"
     OPTIONAL_WARN_COUNT=$((OPTIONAL_WARN_COUNT + 1))
+    record_check "$1" "optional-warning"
 }
 
 check_command() {
@@ -209,6 +250,8 @@ echo "  Passed:   $PASS_COUNT"
 echo "  Warnings: $WARN_COUNT"
 echo "  Optional Warnings: $OPTIONAL_WARN_COUNT"
 echo "  Failed:   $FAIL_COUNT"
+
+print_check_summary
 
 if [[ $FAIL_COUNT -gt 0 ]]; then
     echo ""
