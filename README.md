@@ -12,6 +12,7 @@ This repository provides a guided, script-driven setup for:
 - Theme automation (sunrise/sunset light-dark switching)
 - Backup automation
 - Downloads cleanup automation
+- Tether iPhone integration (clipboard sync, file transfer, OTP autofill via Firefox/Thunderbird extensions)
 
 ## Supported Environment
 
@@ -31,6 +32,7 @@ The scripts are Ubuntu + GNOME focused and may not behave correctly on other dis
 - `scripts/theme-automation/theme-automation-setup.sh` - Theme automation install
 - `scripts/backup/backup-setup.sh` - Backup automation installer
 - `scripts/downloads-cleanup/downloads-cleanup-setup.sh` - Downloads cleanup installer
+- `system/tether-setup.sh` - Tether iPhone integration installer (https://github.com/zackb/tether)
 - `scripts/ubuntu-dry-run.sh` - Readiness checks (non-destructive)
 - `scripts/ubuntu-gnome-smoke-test.sh` - Basic Ubuntu + GNOME preflight check
 - `ARCHITECTURE.md` - Project architecture details
@@ -84,6 +86,7 @@ Dry-run checks include:
 6. Theme automation setup
 7. Backup automation setup (optional)
 8. Downloads cleanup setup
+9. Tether iPhone integration setup (optional, builds from source)
 
 At the end, a step result summary is printed with passed/skipped/failed states.
 
@@ -116,6 +119,7 @@ Show help:
 - Backup setup prompts for destination before enabling scheduled backup.
 - Downloads cleanup removes files older than 30 days and prunes empty directories.
 - Theme automation uses a user-level systemd timer.
+- Tether setup compiles from source and requires a Wayland compositor with `wlr-data-control` (e.g. GNOME on Wayland); the Firefox/Thunderbird add-ons themselves must still be installed manually from the extension stores.
 
 ## Troubleshooting
 
@@ -145,8 +149,8 @@ Use this checklist when preparing support for a new Ubuntu release.
 - Update `is_supported_ubuntu_release()` in `lib/ubuntu-release.sh`.
 - Keep previous LTS in the list while transition testing is in progress.
 - Run both:
-	- `./main.sh --dry-run`
-	- `./main.sh --dry-run --strict`
+  - `./main.sh --dry-run`
+  - `./main.sh --dry-run --strict`
 
 ### 2) Re-verify codename-based repositories
 
@@ -197,6 +201,7 @@ Run shell syntax checks:
 - `bash -n scripts/backup/daily-backup.sh`
 - `bash -n scripts/downloads-cleanup/downloads-cleanup-setup.sh`
 - `bash -n scripts/downloads-cleanup/downloads-cleanup.sh`
+- `bash -n system/tether-setup.sh`
 - `bash -n scripts/ubuntu-dry-run.sh`
 - `bash -n lib/ubuntu-release.sh`
 

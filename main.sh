@@ -191,6 +191,7 @@ echo "   • Gaming environment (Wine & Lutris)"
 echo "   • Automatic theme switching (light/dark)"
 echo "   • Automated backup system"
 echo "   • Downloads folder cleanup"
+echo "   • Tether iPhone integration (optional)"
 echo ""
 echo "🖥️  Target environment: Ubuntu + GNOME"
 echo ""
@@ -200,31 +201,49 @@ echo ""
 read -p "Press Enter to continue..."
 echo ""
 
-run_step "🔧 STEP 1/8: System Level Setup" "./system/system-level-setup.sh"
-run_step "💻 STEP 2/8: Development Tools Setup" "./dev/dev-setup.sh"
-run_step "🎨 STEP 3/8: ZSH Theme & Fonts Setup" "./dev/zsh-theme.sh"
-run_step "📱 STEP 4/8: Application Setup" "./app/app-setup.sh"
-run_step "🎮 STEP 5/8: Gaming Environment Setup" "./scripts/gaming/gaming.sh"
-run_step "🎨 STEP 6/8: Theme Automation Setup" "./scripts/theme-automation/theme-automation-setup.sh"
+run_step "🔧 STEP 1/9: System Level Setup" "./system/system-level-setup.sh"
+run_step "💻 STEP 2/9: Development Tools Setup" "./dev/dev-setup.sh"
+run_step "🎨 STEP 3/9: ZSH Theme & Fonts Setup" "./dev/zsh-theme.sh"
+run_step "📱 STEP 4/9: Application Setup" "./app/app-setup.sh"
+run_step "🎮 STEP 5/9: Gaming Environment Setup" "./scripts/gaming/gaming.sh"
+run_step "🎨 STEP 6/9: Theme Automation Setup" "./scripts/theme-automation/theme-automation-setup.sh"
 
 # Backup setup
 BACKUP_RAN=false
-echo "💾 STEP 7/8: Backup Automation Setup"
+echo "💾 STEP 7/9: Backup Automation Setup"
 echo "---------------------------------------------"
 echo "⚠️  This will set up automated daily backups at 2:00 AM"
 echo "   (You'll be prompted for backup destination)"
 read -p "Do you want to proceed with backup automation setup? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    run_step "💾 STEP 7/8: Backup Automation Setup" "./scripts/backup/backup-setup.sh" "true"
+    run_step "💾 STEP 7/9: Backup Automation Setup" "./scripts/backup/backup-setup.sh" "true"
     BACKUP_RAN=true
 else
     echo "⏭️  Skipping backup automation setup"
-    record_step_result "💾 STEP 7/8: Backup Automation Setup" "skipped"
+    record_step_result "💾 STEP 7/9: Backup Automation Setup" "skipped"
 fi
 echo ""
 
-run_step "🗂️  STEP 8/8: Downloads Cleanup Setup" "./scripts/downloads-cleanup/downloads-cleanup-setup.sh"
+run_step "🗂️  STEP 8/9: Downloads Cleanup Setup" "./scripts/downloads-cleanup/downloads-cleanup-setup.sh"
+
+# Tether setup (builds from source, so opt-in)
+TETHER_RAN=false
+echo "📱 STEP 9/9: Tether iPhone Integration Setup"
+echo "---------------------------------------------"
+echo "⚠️  This builds tether from source (compiler + dev libraries required)"
+echo "   and registers the native messaging host for the Firefox/Thunderbird"
+echo "   extensions. See https://github.com/zackb/tether for details."
+read -p "Do you want to proceed with Tether setup? (y/N): " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    run_step "📱 STEP 9/9: Tether iPhone Integration Setup" "./system/tether-setup.sh" "true"
+    TETHER_RAN=true
+else
+    echo "⏭️  Skipping Tether setup"
+    record_step_result "📱 STEP 9/9: Tether iPhone Integration Setup" "skipped"
+fi
+echo ""
 
 print_setup_summary
 
@@ -245,6 +264,11 @@ else
     echo "   ⏭️  Automated backup system skipped"
 fi
 echo "   ✅ Downloads cleanup automation enabled"
+if [[ "$TETHER_RAN" == "true" ]]; then
+    echo "   ✅ Tether iPhone integration installed"
+else
+    echo "   ⏭️  Tether iPhone integration skipped"
+fi
 echo ""
 echo "🔄 IMPORTANT: Please reboot your system to ensure all changes take effect"
 echo ""
