@@ -104,23 +104,20 @@ check_package zsh
 check_package htop
 check_package github-cli
 check_package postgresql
-check_package redis
-check_package docker
+check_package valkey
 check_package visual-studio-code-bin
 check_package spotify-launcher
-check_package discord
 check_package slack-desktop
 check_package steam
 check_package protonmail-bridge
-check_package zoom
-check_package wine
+check_package wine-staging
 check_package lutris
 
 echo ""
 echo "Planned setup steps (no changes made):"
 echo "  1) os/omarchy/system-level-setup.sh"
 echo "  2) os/omarchy/dev-setup.sh"
-echo "  3) dev/zsh-theme.sh"
+echo "  3) os/omarchy/shell-setup.sh"
 echo "  4) os/omarchy/app-setup.sh"
 echo "  5) os/omarchy/gaming.sh"
 echo "  6) os/omarchy/theme-automation-setup.sh"

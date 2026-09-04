@@ -249,7 +249,7 @@ echo ""
 
 run_step "🔧 STEP 1/8: System Level Setup" "$OS_SCRIPT_DIR/system-level-setup.sh"
 run_step "💻 STEP 2/8: Development Tools Setup" "$OS_SCRIPT_DIR/dev-setup.sh"
-run_step "🎨 STEP 3/8: ZSH Theme & Fonts Setup" "./dev/zsh-theme.sh"
+run_step "🎨 STEP 3/8: Shell & Fonts Setup" "$OS_SCRIPT_DIR/shell-setup.sh"
 run_step "📱 STEP 4/8: Application Setup" "$OS_SCRIPT_DIR/app-setup.sh"
 run_step "🎮 STEP 5/8: Gaming Environment Setup" "$OS_SCRIPT_DIR/gaming.sh"
 run_step "🎨 STEP 6/8: Theme Automation Setup" "$OS_SCRIPT_DIR/theme-automation-setup.sh"

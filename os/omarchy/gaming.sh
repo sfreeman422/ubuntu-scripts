@@ -12,7 +12,7 @@ echo "Omarchy Gaming Environment Setup Starting..."
 echo "========================================="
 
 echo "🎮 Installing gaming packages..."
-omarchy_install_packages wine winetricks lutris
+omarchy_install_packages lutris umu-launcher wine-staging wine-mono wine-gecko winetricks python-protobuf
 echo "✅ Gaming packages installed successfully"
 echo ""
 
@@ -21,7 +21,8 @@ echo "🎉 Omarchy Gaming Environment Setup Complete!"
 echo "========================================="
 echo ""
 echo "📋 Gaming tools installed:"
-echo "   ✓ Wine - Windows compatibility layer"
+echo "   ✓ Wine Staging - Windows compatibility layer"
 echo "   ✓ Winetricks - Wine helper tooling"
 echo "   ✓ Lutris - Gaming platform manager"
+echo "   ✓ GE/UMU support packages for modern launchers"
 echo ""

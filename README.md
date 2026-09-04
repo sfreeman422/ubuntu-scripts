@@ -29,7 +29,7 @@ This repository provides a guided, script-driven setup for:
 - `os/omarchy/` - Omarchy-specific setup entrypoints
 - `system/system-level-setup.sh` - Ubuntu core system setup implementation
 - `dev/dev-setup.sh` - Ubuntu developer tooling installation
-- `dev/zsh-theme.sh` - Nerd Fonts + Powerlevel10k setup
+- `dev/zsh-theme.sh` - Ubuntu Nerd Fonts + Powerlevel10k setup
 - `app/app-setup.sh` - Ubuntu desktop app installs
 - `scripts/gaming/gaming.sh` - Ubuntu Wine and Lutris setup
 - `scripts/theme-automation/theme-automation-setup.sh` - Ubuntu GNOME theme automation install
@@ -90,14 +90,14 @@ Dry-run checks include:
 
 1. System level setup
 2. Development tools setup
-3. ZSH theme and fonts setup
+3. Shell and fonts setup
 4. Application setup
 5. Gaming setup
 6. Theme automation setup
 7. Backup automation setup (optional)
 8. Downloads cleanup setup
 
-Ubuntu steps are sourced from `os/ubuntu/`, while Omarchy-specific steps are sourced from `os/omarchy/`. Shared automation such as ZSH theme setup, backup setup, and downloads cleanup remains reusable across both targets.
+Ubuntu steps are sourced from `os/ubuntu/`, while Omarchy-specific steps are sourced from `os/omarchy/`. Shared automation such as backup setup and downloads cleanup remains reusable across both targets, while shell/theme bootstrapping stays OS-specific.
 
 At the end, a step result summary is printed with passed/skipped/failed states.
 
@@ -206,6 +206,8 @@ Run shell syntax checks:
 - `bash -n system/system-level-setup.sh`
 - `bash -n dev/dev-setup.sh`
 - `bash -n dev/zsh-theme.sh`
+- `bash -n os/ubuntu/shell-setup.sh`
+- `bash -n os/omarchy/shell-setup.sh`
 - `bash -n app/app-setup.sh`
 - `bash -n scripts/gaming/gaming.sh`
 - `bash -n scripts/theme-automation/theme-automation-setup.sh`
