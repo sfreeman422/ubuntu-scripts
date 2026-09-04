@@ -1,6 +1,6 @@
 # ubuntu-scripts
 
-Automated first-time Ubuntu desktop setup for a GNOME-based environment.
+Automated first-time desktop setup for either Ubuntu or Omarchy.
 
 This repository provides a guided, script-driven setup for:
 
@@ -13,27 +13,33 @@ This repository provides a guided, script-driven setup for:
 - Backup automation
 - Downloads cleanup automation
 
-## Supported Environment
+## Supported Environments
 
 - Ubuntu (validated: 24.04 and 26.04)
 - GNOME desktop session
+- Omarchy
+- Hyprland / Omarchy desktop session
 
-The scripts are Ubuntu + GNOME focused and may not behave correctly on other distributions or desktop environments.
+`main.sh` auto-detects the current operating system and dispatches to the matching OS-specific setup scripts.
 
 ## Repository Layout
 
 - `main.sh` - Primary orchestrator for full setup and dry-run mode
-- `system/system-level-setup.sh` - Core system setup
-- `dev/dev-setup.sh` - Developer tooling installation
+- `os/ubuntu/` - Ubuntu-specific setup entrypoints
+- `os/omarchy/` - Omarchy-specific setup entrypoints
+- `system/system-level-setup.sh` - Ubuntu core system setup implementation
+- `dev/dev-setup.sh` - Ubuntu developer tooling installation
 - `dev/zsh-theme.sh` - Nerd Fonts + Powerlevel10k setup
-- `app/app-setup.sh` - Desktop app installs
-- `scripts/gaming/gaming.sh` - Wine and Lutris setup
-- `scripts/theme-automation/theme-automation-setup.sh` - Theme automation install
+- `app/app-setup.sh` - Ubuntu desktop app installs
+- `scripts/gaming/gaming.sh` - Ubuntu Wine and Lutris setup
+- `scripts/theme-automation/theme-automation-setup.sh` - Ubuntu GNOME theme automation install
+- `scripts/theme-automation/omarchy-theme-automation.sh` - Omarchy theme automation runner
 - `scripts/backup/backup-setup.sh` - Backup automation installer
 - `scripts/downloads-cleanup/downloads-cleanup-setup.sh` - Downloads cleanup installer
-- `scripts/ubuntu-dry-run.sh` - Readiness checks (non-destructive)
+- `scripts/ubuntu-dry-run.sh` - Ubuntu readiness checks (non-destructive)
 - `scripts/ubuntu-gnome-smoke-test.sh` - Basic Ubuntu + GNOME preflight check
-- `ARCHITECTURE.md` - Project architecture details
+- `lib/os-detection.sh` - Shared OS detection helpers
+- `lib/setup-common.sh` - Shared setup helpers
 
 ## Quick Start
 
@@ -42,6 +48,13 @@ From the repository root:
 ```bash
 chmod +x main.sh
 ./main.sh
+```
+
+To override auto-detection explicitly:
+
+```bash
+./main.sh --os ubuntu
+./main.sh --os omarchy
 ```
 
 The setup is interactive and may prompt for:
@@ -65,10 +78,9 @@ Strict dry-run treats warnings as failures (for CI-like gating):
 
 Dry-run checks include:
 
-- OS and GNOME validation
+- OS/session validation
 - Required command availability
-- External repository/download reachability
-- Apt package visibility
+- Package visibility for the selected target
 - Planned setup step preview
 - Detailed check summary at the end
 
@@ -84,6 +96,8 @@ Dry-run checks include:
 6. Theme automation setup
 7. Backup automation setup (optional)
 8. Downloads cleanup setup
+
+Ubuntu steps are sourced from `os/ubuntu/`, while Omarchy-specific steps are sourced from `os/omarchy/`. Shared automation such as ZSH theme setup, backup setup, and downloads cleanup remains reusable across both targets.
 
 At the end, a step result summary is printed with passed/skipped/failed states.
 
@@ -101,7 +115,8 @@ If optional app endpoints are temporarily unavailable, core setup can still proc
 Run smoke test:
 
 ```bash
-./scripts/ubuntu-gnome-smoke-test.sh
+./os/ubuntu/smoke-test.sh
+./os/omarchy/smoke-test.sh
 ```
 
 Show help:
@@ -199,6 +214,24 @@ Run shell syntax checks:
 - `bash -n scripts/downloads-cleanup/downloads-cleanup.sh`
 - `bash -n scripts/ubuntu-dry-run.sh`
 - `bash -n lib/ubuntu-release.sh`
+- `bash -n lib/os-detection.sh`
+- `bash -n lib/setup-common.sh`
+- `bash -n os/ubuntu/system-level-setup.sh`
+- `bash -n os/ubuntu/dev-setup.sh`
+- `bash -n os/ubuntu/app-setup.sh`
+- `bash -n os/ubuntu/gaming.sh`
+- `bash -n os/ubuntu/theme-automation-setup.sh`
+- `bash -n os/ubuntu/dry-run.sh`
+- `bash -n os/ubuntu/smoke-test.sh`
+- `bash -n os/omarchy/common.sh`
+- `bash -n os/omarchy/system-level-setup.sh`
+- `bash -n os/omarchy/dev-setup.sh`
+- `bash -n os/omarchy/app-setup.sh`
+- `bash -n os/omarchy/gaming.sh`
+- `bash -n os/omarchy/theme-automation-setup.sh`
+- `bash -n os/omarchy/dry-run.sh`
+- `bash -n os/omarchy/smoke-test.sh`
+- `bash -n scripts/theme-automation/omarchy-theme-automation.sh`
 
 Then run:
 

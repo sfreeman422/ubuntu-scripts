@@ -8,7 +8,12 @@
 # Source the GNOME environment library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="$(cd "$SCRIPT_DIR/../lib" && pwd)"
+if [[ -f "$LIB_DIR/setup-common.sh" ]]; then
+    # shellcheck disable=SC1091
+    source "$LIB_DIR/setup-common.sh"
+fi
 if [[ -f "$LIB_DIR/gnome-environment.sh" ]]; then
+    # shellcheck disable=SC1091
     source "$LIB_DIR/gnome-environment.sh"
 else
     echo "❌ Error: required library '$LIB_DIR/gnome-environment.sh' not found." >&2
@@ -109,8 +114,11 @@ echo ""
 
 # Oh my ZSH
 echo "🎨 Installing Oh My Zsh framework..."
-echo "   Note: This will change your default shell and may open a new zsh session"
-sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
+echo "   Note: This will change your default shell"
+if ! install_oh_my_zsh_if_missing; then
+    echo "❌ Oh My Zsh installation failed"
+    exit 1
+fi
 
 echo "✅ Oh My Zsh installed successfully"
 echo ""
@@ -118,12 +126,8 @@ echo ""
 # Update alias
 echo "⚡ Adding useful shell aliases..."
 echo "   - Adding 'uar' alias for update/upgrade/autoremove..."
-if ! grep -q 'alias uar=' ~/.zshrc 2>/dev/null; then
-    echo 'alias uar="sudo apt update && sudo apt upgrade && sudo apt autoremove -y"' >> ~/.zshrc
-    echo "✅ Shell aliases added successfully"
-else
-    echo "✅ Shell aliases already present"
-fi
+append_line_once "$HOME/.zshrc" 'alias uar="sudo apt update && sudo apt upgrade && sudo apt autoremove -y"'
+echo "✅ Shell aliases added successfully"
 echo ""
 
 echo "========================================="

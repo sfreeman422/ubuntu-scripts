@@ -7,14 +7,16 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR" || exit 1
 
-UBUNTU_LIB="$SCRIPT_DIR/lib/ubuntu-release.sh"
-if [[ -f "$UBUNTU_LIB" ]]; then
-    # shellcheck disable=SC1090
-    source "$UBUNTU_LIB"
-fi
+for lib_file in "$SCRIPT_DIR/lib/ubuntu-release.sh" "$SCRIPT_DIR/lib/os-detection.sh"; do
+    if [[ -f "$lib_file" ]]; then
+        # shellcheck disable=SC1090
+        source "$lib_file"
+    fi
+done
 
 DRY_RUN=false
 DRY_RUN_STRICT=false
+REQUESTED_TARGET=""
 
 declare -a STEP_LABELS=()
 declare -a STEP_STATUSES=()
@@ -103,10 +105,11 @@ run_step() {
 }
 
 usage() {
-    echo "Usage: $0 [--dry-run] [--strict] [--help]"
+    echo "Usage: $0 [--dry-run] [--strict] [--os ubuntu|omarchy] [--help]"
     echo ""
-    echo "  --dry-run   Validate Ubuntu + GNOME readiness without installing anything"
+    echo "  --dry-run   Validate the detected setup target without installing anything"
     echo "  --strict    In dry-run mode, treat warnings as failures"
+    echo "  --os        Override detected target (ubuntu or omarchy)"
     echo "  --help      Show this help"
 }
 
@@ -117,6 +120,15 @@ while [[ $# -gt 0 ]]; do
             ;;
         --strict)
             DRY_RUN_STRICT=true
+            ;;
+        --os)
+            shift
+            if [[ $# -eq 0 ]]; then
+                echo "❌ --os requires a value: ubuntu or omarchy"
+                usage
+                exit 1
+            fi
+            REQUESTED_TARGET="$1"
             ;;
         -h|--help)
             usage
@@ -131,33 +143,68 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+SETUP_TARGET="$(detect_setup_target "$REQUESTED_TARGET" 2>/dev/null || true)"
+if [[ -z "$SETUP_TARGET" ]]; then
+    echo "❌ Unable to determine a supported setup target from this machine."
+    echo "   Supported targets: ubuntu, omarchy"
+    echo "   Detected OS: $(get_os_pretty_name 2>/dev/null || echo unknown)"
+    exit 1
+fi
+
+SETUP_DISPLAY_NAME="$(get_setup_display_name "$SETUP_TARGET")"
+OS_SCRIPT_DIR="$SCRIPT_DIR/os/$SETUP_TARGET"
+
 preflight_checks() {
-    if [[ -f /etc/os-release ]]; then
-        # shellcheck disable=SC1091
-        source /etc/os-release
-        if [[ "$ID" != "ubuntu" ]]; then
-            echo "❌ This setup is intended for Ubuntu only. Detected: ${PRETTY_NAME:-unknown}"
+    if [[ ! -d "$OS_SCRIPT_DIR" ]]; then
+        echo "❌ Missing setup directory for target '$SETUP_TARGET': $OS_SCRIPT_DIR"
+        exit 1
+    fi
+
+    case "$SETUP_TARGET" in
+        ubuntu)
+            if ! is_ubuntu_os; then
+                echo "❌ Ubuntu target selected, but the current OS is $(get_os_pretty_name)"
+                exit 1
+            fi
+
+            if ! command -v gnome-shell >/dev/null 2>&1; then
+                echo "❌ GNOME Shell not detected. Ubuntu setup supports GNOME only."
+                exit 1
+            fi
+
+            if declare -f is_supported_ubuntu_release >/dev/null 2>&1; then
+                if is_supported_ubuntu_release; then
+                    echo "✅ Ubuntu release $(get_ubuntu_version_id) is supported."
+                else
+                    echo "⚠️  Ubuntu release $(get_ubuntu_version_id) is not explicitly validated by this repo."
+                    echo "   Supported Ubuntu targets: 24.04 and 26.04"
+                    echo "   Continuing in best-effort mode..."
+                fi
+            fi
+            ;;
+        omarchy)
+            if ! is_omarchy_os; then
+                echo "❌ Omarchy target selected, but the current OS is $(get_os_pretty_name)"
+                exit 1
+            fi
+
+            if ! command -v omarchy >/dev/null 2>&1; then
+                echo "❌ Omarchy CLI not detected. This setup expects a full Omarchy environment."
+                exit 1
+            fi
+
+            if ! command -v hyprctl >/dev/null 2>&1; then
+                echo "❌ Hyprland tooling not detected. Omarchy setup expects the default Omarchy desktop session."
+                exit 1
+            fi
+
+            echo "✅ Omarchy environment detected."
+            ;;
+        *)
+            echo "❌ Unsupported setup target: $SETUP_TARGET"
             exit 1
-        fi
-    else
-        echo "❌ Unable to verify OS. /etc/os-release not found."
-        exit 1
-    fi
-
-    if ! command -v gnome-shell >/dev/null 2>&1; then
-        echo "❌ GNOME Shell not detected. This setup supports Ubuntu with GNOME only."
-        exit 1
-    fi
-
-    if declare -f is_supported_ubuntu_release >/dev/null 2>&1; then
-        if is_supported_ubuntu_release; then
-            echo "✅ Ubuntu release $(get_ubuntu_version_id) is supported."
-        else
-            echo "⚠️  Ubuntu release $(get_ubuntu_version_id) is not explicitly validated by this repo."
-            echo "   Supported targets: 24.04 and 26.04"
-            echo "   Continuing in best-effort mode..."
-        fi
-    fi
+            ;;
+    esac
 }
 
 preflight_checks
@@ -167,9 +214,9 @@ if [[ "$DRY_RUN" == "true" ]]; then
     echo "🧪 Running dry-run validation mode..."
     if [[ "$DRY_RUN_STRICT" == "true" ]]; then
         echo "🔒 Strict mode enabled (warnings will fail the run)."
-        bash "$SCRIPT_DIR/scripts/ubuntu-dry-run.sh" --strict
+        bash "$OS_SCRIPT_DIR/dry-run.sh" --strict
     else
-        bash "$SCRIPT_DIR/scripts/ubuntu-dry-run.sh"
+        bash "$OS_SCRIPT_DIR/dry-run.sh"
     fi
     exit $?
 fi
@@ -179,10 +226,10 @@ if [[ "$DRY_RUN_STRICT" == "true" ]]; then
 fi
 
 echo "============================================="
-echo "🚀 Ubuntu First-Time Setup Starting..."
+echo "🚀 First-Time Setup Starting..."
 echo "============================================="
 echo ""
-echo "This script will set up your Ubuntu system with:"
+echo "This script will set up your system with:"
 echo "   • System packages and configuration"
 echo "   • Development tools and environment"
 echo "   • ZSH with modern theme"
@@ -192,7 +239,7 @@ echo "   • Automatic theme switching (light/dark)"
 echo "   • Automated backup system"
 echo "   • Downloads folder cleanup"
 echo ""
-echo "🖥️  Target environment: Ubuntu + GNOME"
+echo "🖥️  Target environment: $SETUP_DISPLAY_NAME"
 echo ""
 echo "⏳ Estimated time: 15-30 minutes"
 echo "💡 You may be prompted for sudo password during installation"
@@ -200,12 +247,12 @@ echo ""
 read -p "Press Enter to continue..."
 echo ""
 
-run_step "🔧 STEP 1/8: System Level Setup" "./system/system-level-setup.sh"
-run_step "💻 STEP 2/8: Development Tools Setup" "./dev/dev-setup.sh"
+run_step "🔧 STEP 1/8: System Level Setup" "$OS_SCRIPT_DIR/system-level-setup.sh"
+run_step "💻 STEP 2/8: Development Tools Setup" "$OS_SCRIPT_DIR/dev-setup.sh"
 run_step "🎨 STEP 3/8: ZSH Theme & Fonts Setup" "./dev/zsh-theme.sh"
-run_step "📱 STEP 4/8: Application Setup" "./app/app-setup.sh"
-run_step "🎮 STEP 5/8: Gaming Environment Setup" "./scripts/gaming/gaming.sh"
-run_step "🎨 STEP 6/8: Theme Automation Setup" "./scripts/theme-automation/theme-automation-setup.sh"
+run_step "📱 STEP 4/8: Application Setup" "$OS_SCRIPT_DIR/app-setup.sh"
+run_step "🎮 STEP 5/8: Gaming Environment Setup" "$OS_SCRIPT_DIR/gaming.sh"
+run_step "🎨 STEP 6/8: Theme Automation Setup" "$OS_SCRIPT_DIR/theme-automation-setup.sh"
 
 # Backup setup
 BACKUP_RAN=false
@@ -229,7 +276,7 @@ run_step "🗂️  STEP 8/8: Downloads Cleanup Setup" "./scripts/downloads-clean
 print_setup_summary
 
 echo "============================================="
-echo "🎉 Ubuntu First-Time Setup Complete!"
+echo "🎉 First-Time Setup Complete!"
 echo "============================================="
 echo ""
 echo "📋 Setup Summary:"
@@ -251,7 +298,11 @@ echo ""
 echo "💡 Next steps after reboot:"
 echo "   - ZSH and Powerlevel10k configuration will run automatically"
 echo "   - Configure GitHub CLI: gh auth login"
-echo "   - Add yourself to docker group: sudo usermod -aG docker $USER (if Docker was installed)"
+if [[ "$SETUP_TARGET" == "ubuntu" ]]; then
+    echo "   - Add yourself to docker group: sudo usermod -aG docker $USER (if Docker was installed)"
+else
+    echo "   - Continue using 'sudo docker' unless you explicitly enable sudoless Docker in Omarchy"
+fi
 echo "   - Set up ProtonMail Bridge if needed"
 echo ""
 echo "📚 Documentation and logs:"
