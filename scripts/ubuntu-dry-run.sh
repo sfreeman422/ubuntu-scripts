@@ -216,6 +216,7 @@ check_url "WineHQ source (${WINEHQ_CODENAME})" "https://dl.winehq.org/wine-build
 check_url "Steam download" "https://repo.steampowered.com/steam/archive/precise/steam_latest.deb"
 check_url "Zoom download" "https://zoom.us/client/latest/zoom_amd64.deb"
 check_url "ProtonMail Bridge download" "https://proton.me/download/bridge/protonmail-bridge_3.21.2-1_amd64.deb"
+check_optional_url "LM Studio installer" "https://lmstudio.ai/install.sh"
 check_url "Lutris 0.5.18 download" "https://github.com/lutris/lutris/releases/download/v0.5.18/lutris_0.5.18_all.deb"
 
 echo ""

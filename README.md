@@ -93,6 +93,7 @@ Some app installs are best-effort with fallbacks:
 
 - Discord: apt first, then snap fallback
 - Slack: direct .deb first, then snap fallback
+- LM Studio: official user-level installer
 
 If optional app endpoints are temporarily unavailable, core setup can still proceed.
 
@@ -145,8 +146,8 @@ Use this checklist when preparing support for a new Ubuntu release.
 - Update `is_supported_ubuntu_release()` in `lib/ubuntu-release.sh`.
 - Keep previous LTS in the list while transition testing is in progress.
 - Run both:
-	- `./main.sh --dry-run`
-	- `./main.sh --dry-run --strict`
+  - `./main.sh --dry-run`
+  - `./main.sh --dry-run --strict`
 
 ### 2) Re-verify codename-based repositories
 
@@ -169,6 +170,7 @@ Check these endpoints in dry-run output and update if they change:
 - Steam .deb
 - Zoom .deb
 - ProtonMail Bridge .deb
+- LM Studio installer
 - Lutris release .deb
 
 ### 4) Keep install paths resilient and idempotent

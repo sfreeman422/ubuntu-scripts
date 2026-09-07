@@ -94,6 +94,17 @@ sudo apt install --fix-broken -y
 echo "✅ Zoom installed successfully"
 echo ""
 
+# Install LM Studio
+echo "🤖 Installing LM Studio..."
+if curl -fsSL https://lmstudio.ai/install.sh | bash; then
+	LM_STUDIO_INSTALL_SUCCESS=true
+	echo "✅ LM Studio installed successfully"
+else
+	LM_STUDIO_INSTALL_SUCCESS=false
+	echo "⚠️  LM Studio installation failed. You can install it manually from https://lmstudio.ai/download"
+fi
+echo ""
+
 echo "========================================="
 echo "🎉 Application Setup Complete!"
 echo "========================================="
@@ -110,9 +121,15 @@ echo "   ✓ Slack - Team communication"
 echo "   ✓ Steam - Gaming platform"
 echo "   ✓ ProtonMail Bridge - Email client bridge"
 echo "   ✓ Zoom - Video conferencing"
+if [[ "$LM_STUDIO_INSTALL_SUCCESS" == "true" ]]; then
+	echo "   ✓ LM Studio - Local AI models"
+else
+	echo "   ⚠️  LM Studio - skipped (install manually)"
+fi
 echo ""
 echo "💡 Quick tips:"
 echo "   - Launch apps from the applications menu"
 echo "   - Steam may require additional setup on first run"
 echo "   - ProtonMail Bridge needs login configuration"
+echo "   - LM Studio may need a shell restart before the lmstudio command is available"
 echo ""
