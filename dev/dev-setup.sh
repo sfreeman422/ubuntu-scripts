@@ -14,11 +14,12 @@ fi
 UBUNTU_CODENAME_VALUE="$(get_ubuntu_codename 2>/dev/null || echo "unknown")"
 
 declare -A TOOL_RESULTS
-TOOL_IDS=(curl git github-cli nvm-node postgresql dbeaver redis vscode docker insomnia aws-cli)
+TOOL_IDS=(curl git github-cli herdr nvm-node postgresql dbeaver redis vscode docker insomnia aws-cli)
 declare -A TOOL_LABELS=(
   [curl]="curl|HTTP client"
   [git]="Git|Version control"
   [github-cli]="GitHub CLI|GitHub integration"
+  [herdr]="Herdr|Coding agent runtime"
   [nvm-node]="NVM + Node.js LTS|JavaScript runtime"
   [postgresql]="PostgreSQL|Database server"
   [dbeaver]="DBeaver|Database client"
@@ -91,6 +92,25 @@ if ! {
 fi
 record_tool_result github-cli true
 echo "✅ GitHub CLI installed successfully"
+echo ""
+
+# Install Herdr
+echo "🐑 Installing Herdr coding agent runtime..."
+herdr_install_dir="${HERDR_INSTALL_DIR:-$HOME/.local/bin}"
+herdr_installer=""
+if herdr_installer="$(mktemp)" \
+  && curl -fsSL https://herdr.dev/install.sh -o "$herdr_installer" \
+  && HERDR_INSTALL_DIR="$herdr_install_dir" sh "$herdr_installer" \
+  && [[ -x "$herdr_install_dir/herdr" ]]; then
+  record_tool_result herdr true
+  echo "✅ Herdr installed successfully"
+else
+  record_tool_result herdr false
+  echo "⚠️  Herdr installation failed. You can install it manually from https://herdr.dev/docs/install/"
+fi
+if [[ -n "$herdr_installer" ]]; then
+  rm -f "$herdr_installer"
+fi
 echo ""
 
 # Install NVM
@@ -274,6 +294,7 @@ echo ""
 echo "💡 Next steps:"
 echo "   - Restart terminal to use NVM/Node.js"
 echo "   - Run 'gh auth login' to authenticate GitHub CLI"
+echo "   - Ensure \$HOME/.local/bin is in PATH, then run 'herdr' to get started"
 echo "   - Add your user to docker group: sudo usermod -aG docker $USER"
 echo "   - Restart to apply docker group changes"
 echo ""

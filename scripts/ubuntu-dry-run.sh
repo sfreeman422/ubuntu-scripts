@@ -209,6 +209,7 @@ WINEHQ_CODENAME="$(get_winehq_codename "$UBUNTU_CODENAME_VALUE" 2>/dev/null || e
 echo ""
 echo "Checking external repositories/downloads..."
 check_url "GitHub CLI apt repo" "https://cli.github.com/packages/dists/stable/Release"
+check_optional_url "Herdr installer" "https://herdr.dev/install.sh"
 check_url "Redis apt repo (${UBUNTU_CODENAME_VALUE})" "https://packages.redis.io/deb/dists/${UBUNTU_CODENAME_VALUE}/Release"
 check_url "Docker apt repo (${UBUNTU_CODENAME_VALUE})" "https://download.docker.com/linux/ubuntu/dists/${UBUNTU_CODENAME_VALUE}/Release"
 check_optional_url "Slack latest .deb" "https://downloads.slack-edge.com/desktop-releases/linux/x64/slack-desktop-latest-amd64.deb"
