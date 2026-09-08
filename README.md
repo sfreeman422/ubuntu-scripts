@@ -5,7 +5,7 @@ Automated first-time Ubuntu desktop setup for a GNOME-based environment.
 This repository provides a guided, script-driven setup for:
 
 - System packages and baseline configuration
-- Development tooling (GitHub CLI, Node/NVM, PostgreSQL, Redis, Docker, VS Code, etc.)
+- Development tooling (GitHub CLI, Herdr, Node/NVM, PostgreSQL, Redis, Docker, VS Code, etc.)
 - ZSH + Powerlevel10k theme setup
 - Essential desktop applications
 - Gaming tooling (Wine + Lutris)
@@ -94,6 +94,7 @@ Some app installs are best-effort with fallbacks:
 - Discord: apt first, then snap fallback
 - Slack: direct .deb first, then snap fallback
 - LM Studio: official user-level installer
+- Herdr: official user-level installer (`~/.local/bin/herdr`)
 
 If optional app endpoints are temporarily unavailable, core setup can still proceed.
 
@@ -171,6 +172,7 @@ Check these endpoints in dry-run output and update if they change:
 - Zoom .deb
 - ProtonMail Bridge .deb
 - LM Studio installer
+- Herdr installer
 - Lutris release .deb
 
 ### 4) Keep install paths resilient and idempotent
