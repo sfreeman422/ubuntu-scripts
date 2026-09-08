@@ -13,20 +13,65 @@ fi
 
 UBUNTU_CODENAME_VALUE="$(get_ubuntu_codename 2>/dev/null || echo "unknown")"
 
+declare -A TOOL_RESULTS
+TOOL_IDS=(curl git github-cli nvm-node postgresql dbeaver redis vscode docker insomnia aws-cli)
+declare -A TOOL_LABELS=(
+  [curl]="curl|HTTP client"
+  [git]="Git|Version control"
+  [github-cli]="GitHub CLI|GitHub integration"
+  [nvm-node]="NVM + Node.js LTS|JavaScript runtime"
+  [postgresql]="PostgreSQL|Database server"
+  [dbeaver]="DBeaver|Database client"
+  [redis]="Redis|In-memory database"
+  [vscode]="VS Code|Code editor"
+  [docker]="Docker|Container platform"
+  [insomnia]="Insomnia|API client"
+  [aws-cli]="AWS CLI|Amazon Web Services CLI"
+)
+
+record_tool_result() {
+  TOOL_RESULTS["$1"]="$2"
+}
+
+install_apt_tool() {
+  local tool_id="$1"
+  local tool_name="$2"
+  shift 2
+
+  if sudo apt install -y "$@"; then
+    record_tool_result "$tool_id" true
+    echo "✅ $tool_name installed successfully"
+  else
+    record_tool_result "$tool_id" false
+    echo "⚠️  $tool_name installation failed."
+  fi
+}
+
+print_tool_summary() {
+  local tool_id tool_name tool_description
+
+  for tool_id in "${TOOL_IDS[@]}"; do
+    IFS='|' read -r tool_name tool_description <<< "${TOOL_LABELS[$tool_id]}"
+    if [[ "${TOOL_RESULTS[$tool_id]:-false}" == "true" ]]; then
+      echo "   ✓ $tool_name - $tool_description"
+    else
+      echo "   ⚠️  $tool_name - installation failed or skipped"
+    fi
+  done
+}
+
 echo "========================================="
 echo "Development Tools Setup Starting..."
 echo "========================================="
 
 # Install curl
 echo "🌐 Installing curl..."
-sudo apt install curl -y 
-echo "✅ curl installed successfully"
+install_apt_tool curl "curl" curl
 echo ""
 
 # Install Git
 echo "📂 Installing Git version control..."
-sudo apt install git -y 
-echo "✅ Git installed successfully"
+install_apt_tool git "Git" git
 echo ""
 
 #Install github-cli
@@ -41,8 +86,10 @@ if ! {
   && sudo apt install gh -y
 }; then
   echo "❌ GitHub CLI installation failed"
+  record_tool_result github-cli false
   exit 1
 fi
+record_tool_result github-cli true
 echo "✅ GitHub CLI installed successfully"
 echo ""
 
@@ -50,6 +97,7 @@ echo ""
 echo "📦 Installing Node Version Manager (NVM)..."
 if ! wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash; then
   echo "❌ NVM installation failed"
+  record_tool_result nvm-node false
   exit 1
 fi
 echo "✅ NVM downloaded and installed"
@@ -65,39 +113,47 @@ export NVM_DIR="$HOME/.nvm"
 echo "🚀 Installing latest LTS Node.js version..."
 if ! command -v nvm >/dev/null 2>&1; then
   echo "❌ nvm command not available after installation"
+  record_tool_result nvm-node false
   exit 1
 fi
 
 if ! nvm install --lts; then
   echo "❌ Node.js LTS installation failed"
+  record_tool_result nvm-node false
   exit 1
 fi
 echo "✅ Node.js LTS installed successfully"
+record_tool_result nvm-node true
 echo ""
 
 
 # Install postgres
 echo "🐘 Installing PostgreSQL database server..."
-sudo apt install -y postgresql postgresql-contrib
-echo "✅ PostgreSQL installed successfully"
+install_apt_tool postgresql "PostgreSQL" postgresql postgresql-contrib
 echo ""
 
 # Starts Postgres service
 echo "🔄 Starting PostgreSQL service..."
-sudo systemctl start postgresql.service
-echo "✅ PostgreSQL service started"
+if [[ "${TOOL_RESULTS[postgresql]:-false}" == "true" ]] && sudo systemctl start postgresql.service; then
+  echo "✅ PostgreSQL service started"
+else
+  echo "⚠️  PostgreSQL service was not started."
+fi
 echo ""
 
 # Install dbeaver
 echo "🗄️  Installing DBeaver database client..."
 if command -v snap >/dev/null 2>&1; then
   if sudo snap install dbeaver-ce --classic; then
+    record_tool_result dbeaver true
     echo "✅ DBeaver installed successfully"
   else
     echo "❌ DBeaver installation failed"
+    record_tool_result dbeaver false
     exit 1
   fi
 else
+  record_tool_result dbeaver false
   echo "⚠️  snap not found. Skipping DBeaver installation."
 fi
 echo ""
@@ -105,14 +161,18 @@ echo ""
 # Install Redis
 echo "📊 Installing Redis in-memory database..."
 echo "   - Adding Redis package repository..."
-sudo apt-get install curl gpg -y 
-curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
-sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb ${UBUNTU_CODENAME_VALUE} main" | sudo tee /etc/apt/sources.list.d/redis.list
-echo "   - Installing Redis..."
-sudo apt-get update
-sudo apt-get install -y redis
-echo "✅ Redis installed successfully"
+if sudo apt-get install -y curl gpg \
+  && curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg \
+  && sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg \
+  && echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb ${UBUNTU_CODENAME_VALUE} main" | sudo tee /etc/apt/sources.list.d/redis.list >/dev/null \
+  && sudo apt-get update \
+  && sudo apt-get install -y redis; then
+  record_tool_result redis true
+  echo "✅ Redis installed successfully"
+else
+  record_tool_result redis false
+  echo "⚠️  Redis installation failed."
+fi
 echo ""
 
 # Install VS Code
@@ -126,9 +186,13 @@ else
   echo "   - VS Code repository already present, skipping addition."
 fi
 echo "   - Updating apt and installing VS Code..."
-sudo apt update
-sudo apt install -y code
-echo "✅ VS Code installed successfully"
+if sudo apt update && sudo apt install -y code; then
+  record_tool_result vscode true
+  echo "✅ VS Code installed successfully"
+else
+  record_tool_result vscode false
+  echo "⚠️  VS Code installation failed."
+fi
 echo ""
 
 # Set up docker
@@ -137,7 +201,9 @@ echo "   - Removing old Docker packages..."
 for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
 echo "   - Setting up Docker repository..."
 sudo apt-get update
-sudo apt-get install -y ca-certificates curl
+if ! sudo apt-get install -y ca-certificates curl; then
+  echo "⚠️  Docker prerequisites installation failed."
+fi
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -146,9 +212,13 @@ echo \
   ${UBUNTU_CODENAME_VALUE} stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 echo "   - Installing Docker Engine..."
-sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
-echo "✅ Docker installed successfully"
+if sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; then
+  record_tool_result docker true
+  echo "✅ Docker installed successfully"
+else
+  record_tool_result docker false
+  echo "⚠️  Docker installation failed."
+fi
 echo ""
 
 # Setup git config
@@ -171,16 +241,23 @@ else
   echo "   - Insomnia repository already present, skipping addition."
 fi
 echo "   - Updating apt and installing Insomnia (insomnia)..."
-sudo apt update
-sudo apt install -y insomnia || sudo apt install -f -y
-echo "✅ Insomnia installed successfully"
+if sudo apt update && sudo apt install -y insomnia; then
+  record_tool_result insomnia true
+elif sudo apt install -f -y && sudo apt install -y insomnia; then
+  record_tool_result insomnia true
+fi
+if [[ "${TOOL_RESULTS[insomnia]:-false}" == "true" ]]; then
+  echo "✅ Insomnia installed successfully"
+else
+  record_tool_result insomnia false
+  echo "⚠️  Insomnia installation failed."
+fi
 echo ""
 
 # Install AWS CLI
 echo "☁️  Installing AWS CLI..."
 echo "   - Installing from apt repository..."
-sudo apt install -y awscli
-echo "✅ AWS CLI installed successfully"
+install_apt_tool aws-cli "AWS CLI" awscli
 echo ""
 
 echo "========================================="
@@ -188,17 +265,7 @@ echo "🎉 Development Tools Setup Complete!"
 echo "========================================="
 echo ""
 echo "📋 Summary of what was installed:"
-echo "   ✓ curl - HTTP client"
-echo "   ✓ Git - Version control"
-echo "   ✓ GitHub CLI - GitHub integration"
-echo "   ✓ NVM + Node.js LTS - JavaScript runtime"
-echo "   ✓ PostgreSQL - Database server"
-echo "   ✓ DBeaver - Database client"
-echo "   ✓ Redis - In-memory database"
-echo "   ✓ VS Code - Code editor"
-echo "   ✓ Docker - Container platform"
-echo "   ✓ Insomnia - API client"
-echo "   ✓ AWS CLI - Amazon Web Services CLI"
+print_tool_summary
 echo ""
 echo "⚙️  Git configured with:"
 echo "   - Rebase on pull: enabled"

@@ -59,15 +59,24 @@ if [[ ${#MISSING_DEPS[@]} -gt 0 ]]; then
     echo "❌ Missing required dependencies: ${MISSING_DEPS[*]}"
     echo "Installing missing packages..."
     
-    sudo apt update
+    if ! sudo apt update; then
+        echo "❌ Unable to update package lists."
+        exit 1
+    fi
     
     for dep in "${MISSING_DEPS[@]}"; do
         case $dep in
             "curl")
-                sudo apt install -y curl
+                if ! sudo apt install -y curl; then
+                    echo "❌ curl installation failed."
+                    exit 1
+                fi
                 ;;
             "jq")
-                sudo apt install -y jq
+                if ! sudo apt install -y jq; then
+                    echo "❌ jq installation failed."
+                    exit 1
+                fi
                 ;;
             "gsettings (GNOME required)")
                 echo "❌ gsettings not found. GNOME Shell is required for GNOME theme automation."
@@ -88,7 +97,11 @@ if apt list --installed 2>/dev/null | grep -q gtk-common-themes; then
     echo "   - gtk-common-themes already installed, connecting snap apps..."
 else
     echo "   - Installing gtk-common-themes via apt..."
-    sudo apt install -y gtk-common-themes
+    if sudo apt install -y gtk-common-themes; then
+        echo "✅ GTK common themes installed successfully"
+    else
+        echo "⚠️  GTK common themes installation failed."
+    fi
 fi
 
 # Create systemd user directory if it doesn't exist

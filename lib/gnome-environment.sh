@@ -238,15 +238,24 @@ install_missing_dependencies() {
     fi
     
     echo "Installing missing dependencies: $missing_commands"
-    sudo apt update
+    if ! sudo apt update; then
+        echo "Error: unable to update package lists."
+        return 1
+    fi
     
     for cmd in $missing_commands; do
         case "$cmd" in
             curl)
-                sudo apt install -y curl
+                if ! sudo apt install -y curl; then
+                    echo "Error: failed to install curl."
+                    return 1
+                fi
                 ;;
             jq)
-                sudo apt install -y jq
+                if ! sudo apt install -y jq; then
+                    echo "Error: failed to install jq."
+                    return 1
+                fi
                 ;;
             gsettings)
                 echo "Error: gsettings not found. GNOME Shell is required."
