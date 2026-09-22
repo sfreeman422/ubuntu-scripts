@@ -20,32 +20,84 @@ log_message() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
 }
 
-# Create backup directory if it doesn't exist
-mkdir -p "$BACKUP_DIR"
-
-if [ ! -d "$BACKUP_BASE_DIR" ]; then
-    log_message "ERROR: Backup base directory does not exist: $BACKUP_BASE_DIR"
+# Fail closed before creating anything under the configured backup path.
+# This prevents a missing removable drive from turning /media/... into an
+# ordinary directory on the source filesystem.
+fatal() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - ERROR: $1" >&2
     exit 1
+}
+
+if [ ! -d "$SOURCE_DIR" ]; then
+    fatal "Source directory does not exist: $SOURCE_DIR"
 fi
+
+BACKUP_PARENT="$(dirname -- "$BACKUP_BASE_DIR")"
+if [ ! -d "$BACKUP_PARENT" ]; then
+    fatal "Backup parent does not exist: $BACKUP_PARENT. Refusing to create it; the backup volume may not be mounted."
+fi
+
+SOURCE_DEVICE=$(findmnt -T "$SOURCE_DIR" -n -o SOURCE 2>/dev/null || true)
+DEST_DEVICE=$(findmnt -T "$BACKUP_PARENT" -n -o SOURCE 2>/dev/null || true)
+
+if [ -z "$SOURCE_DEVICE" ] || [ -z "$DEST_DEVICE" ]; then
+    fatal "Unable to determine source/destination filesystems with findmnt"
+fi
+
+if [ "$SOURCE_DEVICE" = "$DEST_DEVICE" ] && [ "${ALLOW_SAME_FILESYSTEM_BACKUP:-0}" != "1" ]; then
+    fatal "Backup destination resolves to the same filesystem as $SOURCE_DIR ($SOURCE_DEVICE). Refusing to run; the backup volume may not be mounted. Set ALLOW_SAME_FILESYSTEM_BACKUP=1 only if this is intentional."
+fi
+
+mkdir -p -- "$BACKUP_BASE_DIR" || fatal "Unable to create backup base directory: $BACKUP_BASE_DIR"
+
+BACKUP_BASE_REAL=$(realpath -e -- "$BACKUP_BASE_DIR") || fatal "Unable to resolve backup base directory"
+BACKUP_PARENT_REAL=$(realpath -e -- "$BACKUP_PARENT") || fatal "Unable to resolve backup parent directory"
+case "$BACKUP_BASE_REAL" in
+    "$BACKUP_PARENT_REAL"/*) ;;
+    *) fatal "Backup base directory escaped expected parent: $BACKUP_BASE_REAL" ;;
+esac
+
+mkdir -p -- "$BACKUP_DIR" || fatal "Unable to create backup directory: $BACKUP_DIR"
 
 log_message "Starting daily backup of home directory"
+log_message "Source filesystem: $SOURCE_DEVICE"
+log_message "Destination filesystem: $DEST_DEVICE"
 
-# Clean up old backups (keep only last MAX_BACKUPS)
+# Clean up old backups (keep only last MAX_BACKUPS).
+# Only timestamp-named directories directly underneath BACKUP_BASE_DIR are
+# eligible for deletion, and every candidate is canonicalized before rm -rf.
 log_message "Cleaning up old backup directories (keeping last $MAX_BACKUPS)"
-if ! cd "$BACKUP_BASE_DIR"; then
-    log_message "ERROR: Unable to access backup base directory: $BACKUP_BASE_DIR"
-    exit 1
-fi
-
-# Clean up old backup directories
-find . -maxdepth 1 -type d ! -name "." -printf "%T@ %f\n" | \
+find "$BACKUP_BASE_REAL" -mindepth 1 -maxdepth 1 -type d -printf "%T@ %p\n" | \
     sort -nr | \
     tail -n +$((MAX_BACKUPS + 1)) | \
-    while read timestamp dirname; do
-        if [ -d "$dirname" ]; then
-            rm -rf "$dirname"
-            log_message "Removed old backup directory: $dirname"
+    while read -r timestamp candidate; do
+        candidate_name=$(basename -- "$candidate")
+
+        if [[ ! "$candidate_name" =~ ^[0-9]{8}_[0-9]{6}$ ]]; then
+            log_message "Skipping non-backup directory during cleanup: $candidate_name"
+            continue
         fi
+
+        candidate_real=$(realpath -e -- "$candidate") || {
+            log_message "Skipping unresolved cleanup candidate: $candidate"
+            continue
+        }
+
+        case "$candidate_real" in
+            "$BACKUP_BASE_REAL"/*) ;;
+            *)
+                log_message "REFUSING unsafe cleanup candidate outside backup root: $candidate_real"
+                continue
+                ;;
+        esac
+
+        if [ "$candidate_real" = "$BACKUP_BASE_REAL" ] || [ "$candidate_real" = "/" ] || [ "$candidate_real" = "$HOME" ]; then
+            log_message "REFUSING unsafe cleanup candidate: $candidate_real"
+            continue
+        fi
+
+        rm -rf -- "$candidate_real"
+        log_message "Removed old backup directory: $candidate_name"
     done
 
 # Check available disk space and file system type
